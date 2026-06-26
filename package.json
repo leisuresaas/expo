@@ -1,0 +1,43 @@
+{
+  "name": "@leisuresaas/expo",
+  "version": "0.1.0",
+  "description": "Expo SDK for LeisureSaas product OAuth and mobile billing (Integration API / BFF)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leisuresaas/expo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leisuresaas/expo/issues"
+  },
+  "homepage": "https://github.com/leisuresaas/expo#readme",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck"
+  },
+  "peerDependencies": {
+    "expo": ">=52.0.0",
+    "expo-auth-session": ">=6.0.0",
+    "expo-secure-store": ">=14.0.0",
+    "expo-web-browser": ">=14.0.0",
+    "react": ">=18.0.0",
+    "react-native": ">=0.76.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "@types/react-native": "~0.73.0",
+    "typescript": "~5.9.2"
+  }
+}
