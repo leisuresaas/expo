@@ -82,4 +82,5 @@ export type LeisureSaasAuthConfig = {
   redirectPath?: string;
   scopes?: string[];
   storageKey?: string;
+  refreshStorageKey?: string;
 };
