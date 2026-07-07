@@ -75,6 +75,29 @@ export type GoogleConfirmInput = {
   idempotencyKey?: string;
 };
 
+export type RegisterDeviceTokenInput = {
+  platform: MobilePlatform;
+  token: string;
+};
+
+export type SendNotificationInput = {
+  templateKey: string;
+  userId?: string;
+  locale?: string;
+  vars?: Record<string, string>;
+  idempotencyKey?: string;
+};
+
+export type SendNotificationResult = {
+  delivery_id?: string;
+  status?: string;
+  recipient_count?: number;
+};
+
+export type DeviceTokenResult = {
+  status?: string;
+};
+
 export type LeisureSaasAuthConfig = {
   issuer: string;
   clientId: string;
@@ -83,4 +106,20 @@ export type LeisureSaasAuthConfig = {
   scopes?: string[];
   storageKey?: string;
   refreshStorageKey?: string;
+};
+
+export type AdFeedItem = {
+  id: string;
+  type: string;
+  placement: string;
+  priority?: number;
+  title?: string;
+  body_text?: string;
+  image_url?: string;
+  click_url?: string;
+};
+
+export type AdEventInput = {
+  adId: string;
+  eventType: "impression";
 };

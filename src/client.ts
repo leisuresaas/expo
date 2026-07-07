@@ -1,6 +1,9 @@
 import { requestJson } from "./http";
 import type {
+  AdEventInput,
+  AdFeedItem,
   AppleConfirmInput,
+  DeviceTokenResult,
   Entitlement,
   GatewayClientConfig,
   GoogleConfirmInput,
@@ -9,6 +12,9 @@ import type {
   Plan,
   QuotaConsumeResult,
   QuotaUsage,
+  RegisterDeviceTokenInput,
+  SendNotificationInput,
+  SendNotificationResult,
   StoreConfirmResult,
   SubscriptionStatus,
 } from "./types";
@@ -96,6 +102,21 @@ export class LeisureSaasClient {
       method: "POST",
       body,
       headers,
+    });
+  }
+
+  private async del<T>(
+    accessToken: string,
+    bffPath: string,
+    gatewayPath: string,
+  ): Promise<T> {
+    if (this.mode === "bff") {
+      return requestJson<T>(this.baseUrl, bffPath, { accessToken, method: "DELETE" });
+    }
+    return requestJson<T>(this.integrationPrefix, gatewayPath, {
+      accessToken,
+      integrationApiKey: this.integrationApiKey,
+      method: "DELETE",
     });
   }
 
@@ -213,6 +234,79 @@ export class LeisureSaasClient {
     return this.post<StoreConfirmResult>(accessToken, "", "/billing/apple/restore", {
       signed_transactions: signedTransactions,
     });
+  }
+
+  registerDeviceToken(
+    accessToken: string,
+    input: RegisterDeviceTokenInput,
+  ): Promise<DeviceTokenResult> {
+    return this.post<DeviceTokenResult>(
+      accessToken,
+      "/api/v1/notifications/device-tokens",
+      "/notifications/device-tokens",
+      { platform: input.platform, token: input.token },
+    );
+  }
+
+  unregisterDeviceToken(accessToken: string, token: string): Promise<DeviceTokenResult> {
+    const encoded = encodeURIComponent(token.trim());
+    return this.del<DeviceTokenResult>(
+      accessToken,
+      `/api/v1/notifications/device-tokens/${encoded}`,
+      `/notifications/device-tokens/${encoded}`,
+    );
+  }
+
+  getAdsFeed(accessToken: string, placement = "home_banner"): Promise<AdFeedItem[]> {
+    const q = encodeURIComponent(placement.trim());
+    return this.get<{ ads: AdFeedItem[] }>(
+      accessToken,
+      `/api/v1/ads/feed?placement=${q}`,
+      `/ads/feed?placement=${q}`,
+    ).then((r) => r.ads ?? []);
+  }
+
+  recordAdEvents(accessToken: string, events: AdEventInput[]): Promise<number> {
+    if (events.length === 0) {
+      return Promise.resolve(0);
+    }
+    const payload = {
+      events: events.map((ev) => ({
+        ad_id: ev.adId,
+        event_type: ev.eventType,
+      })),
+    };
+    return this.post<{ recorded: number }>(
+      accessToken,
+      "/api/v1/ads/events",
+      "/ads/events",
+      payload,
+    ).then((r) => r.recorded ?? 0);
+  }
+
+  sendNotification(
+    accessToken: string,
+    input: SendNotificationInput,
+  ): Promise<SendNotificationResult> {
+    const idem = input.idempotencyKey?.trim() || newIdempotencyKey("push");
+    const headers = { "Idempotency-Key": idem };
+    const body: Record<string, unknown> = { template_key: input.templateKey };
+    if (input.userId?.trim()) {
+      body.user_id = input.userId.trim();
+    }
+    if (input.locale?.trim()) {
+      body.locale = input.locale.trim();
+    }
+    if (input.vars && Object.keys(input.vars).length > 0) {
+      body.vars = input.vars;
+    }
+    return this.post<SendNotificationResult>(
+      accessToken,
+      "/api/v1/notifications/send",
+      "/notifications/send",
+      body,
+      headers,
+    );
   }
 }
 

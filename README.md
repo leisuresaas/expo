@@ -1,6 +1,6 @@
 # @leisuresaas/expo
 
-Expo / React Native SDK for LeisureSaas **product OAuth** and **mobile billing** (catalog plans, store confirm/restore, subscription).
+Expo / React Native SDK for LeisureSaas **product OAuth**, **mobile billing**, and **platform ads** (catalog plans, store confirm/restore, subscription, ad banners).
 
 Mirrors [`sdk/go`](../go) Integration API surface for Expo apps. Production apps should call a **product BFF** that holds the Integration API Key; use **gateway mode** only for local dev.
 
@@ -87,6 +87,11 @@ Do **not** ship Integration API Key in App Store / Play builds.
 | `confirmApplePurchase` | ✅ | ✅ |
 | `confirmGooglePurchase` | ✅ | ✅ |
 | `restoreApplePurchases` | ✅ | ✅ |
+| `registerDeviceToken` | ✅ | ✅ |
+| `unregisterDeviceToken` | ✅ | ✅ |
+| `sendNotification` | ✅ | ✅ |
+| `getAdsFeed` | ✅ | ✅ |
+| `recordAdEvents` | ✅ | ✅ |
 | `getQuotaUsage` | ❌ (proxy on BFF) | ✅ |
 | `consumeQuota` | ❌ | ✅ |
 | `checkPermission` | ❌ | ✅ |
@@ -102,7 +107,51 @@ await client.confirmApplePurchase(token, {
   signedTransaction: devAppleSignedTransaction("com.example.pro.monthly"),
   storeProductId: "com.example.pro.monthly",
 });
+
+await client.registerDeviceToken(token, {
+  platform: mobilePlatform(),
+  token: devDeviceToken(mobilePlatform()),
+});
+await client.sendNotification(token, {
+  templateKey: "product_alert",
+  vars: { message: "Hello from Expo" },
+});
 ```
+
+## Platform ads (UI components)
+
+`GET /ads/feed` returns **`click_url`** (platform tracking URL, often short `/c/{short_id}`). Clients open it for navigation; impressions use `POST /ads/events` with Bearer.
+
+```tsx
+import {
+  LeisureAdsProvider,
+  LeisureAdBanner,
+  createLeisureSaasClient,
+  useLeisureSaasAuth,
+} from "@leisuresaas/expo";
+
+const client = createLeisureSaasClient({ bffBaseUrl: "https://api.myproduct.com" });
+
+function Home() {
+  const { resolveAccessToken } = useLeisureSaasAuth();
+
+  return (
+    <LeisureAdsProvider client={client} resolveAccessToken={resolveAccessToken}>
+      <LeisureAdBanner />
+    </LeisureAdsProvider>
+  );
+}
+```
+
+Lower-level API (custom UI):
+
+```ts
+const ads = await client.getAdsFeed(token, "home_banner");
+await client.recordAdEvents(token, [{ adId: ads[0].id, eventType: "impression" }]);
+// navigation: open ads[0].click_url (no Bearer)
+```
+
+Plan permissions: `product.{slug}.ads.feed.read`, `product.{slug}.ads.events.write`.
 
 ## Reference
 

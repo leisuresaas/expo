@@ -1,6 +1,6 @@
 import { LeisureSaasHttpError } from "./errors";
 
-export type HttpMethod = "GET" | "POST";
+export type HttpMethod = "GET" | "POST" | "DELETE";
 
 export type RequestOptions = {
   method?: HttpMethod;
