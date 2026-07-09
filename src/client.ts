@@ -2,6 +2,7 @@ import { requestJson } from "./http";
 import type {
   AdEventInput,
   AdFeedItem,
+  AdsFeedResponse,
   AppleConfirmInput,
   DeviceTokenResult,
   Entitlement,
@@ -257,13 +258,13 @@ export class LeisureSaasClient {
     );
   }
 
-  getAdsFeed(accessToken: string, placement = "home_banner"): Promise<AdFeedItem[]> {
+  getAdsFeed(accessToken: string, placement = "home_banner"): Promise<AdsFeedResponse> {
     const q = encodeURIComponent(placement.trim());
-    return this.get<{ ads: AdFeedItem[] }>(
+    return this.get<AdsFeedResponse>(
       accessToken,
       `/api/v1/ads/feed?placement=${q}`,
       `/ads/feed?placement=${q}`,
-    ).then((r) => r.ads ?? []);
+    ).then((r) => ({ ...r, ads: r.ads ?? [] }));
   }
 
   recordAdEvents(accessToken: string, events: AdEventInput[]): Promise<number> {
@@ -274,6 +275,8 @@ export class LeisureSaasClient {
       events: events.map((ev) => ({
         ad_id: ev.adId,
         event_type: ev.eventType,
+        ...(ev.placementKey ? { placement_key: ev.placementKey } : {}),
+        ...(ev.groupId ? { group_id: ev.groupId } : {}),
       })),
     };
     return this.post<{ recorded: number }>(

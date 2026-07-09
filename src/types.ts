@@ -110,8 +110,9 @@ export type LeisureSaasAuthConfig = {
 
 export type AdFeedItem = {
   id: string;
+  scope?: string;
   type: string;
-  placement: string;
+  placement?: string;
   priority?: number;
   title?: string;
   body_text?: string;
@@ -119,7 +120,34 @@ export type AdFeedItem = {
   click_url?: string;
 };
 
+export type AdFeedRotation = {
+  enabled: boolean;
+  mode: string;
+  interval_sec: number;
+  loop: boolean;
+  autoplay: boolean;
+  show_indicators: boolean;
+};
+
+export type AdFeedSource = {
+  kind: string;
+  group_id: string;
+  scope: string;
+  overridden?: boolean;
+};
+
+export type AdsFeedResponse = {
+  placement: string;
+  type?: string;
+  layout?: string;
+  source?: AdFeedSource;
+  rotation?: AdFeedRotation;
+  ads: AdFeedItem[];
+};
+
 export type AdEventInput = {
   adId: string;
   eventType: "impression";
+  placementKey?: string;
+  groupId?: string;
 };

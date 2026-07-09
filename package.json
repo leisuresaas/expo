@@ -1,6 +1,6 @@
 {
   "name": "@leisuresaas/expo",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Expo SDK for LeisureSaas product OAuth and mobile billing (Integration API / BFF)",
   "license": "MIT",
   "repository": {
@@ -37,7 +37,6 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "@types/react-native": "~0.73.0",
     "typescript": "~5.9.2"
   }
 }

@@ -124,8 +124,8 @@ await client.sendNotification(token, {
 
 ```tsx
 import {
-  LeisureAdsProvider,
-  LeisureAdBanner,
+  AdsProvider,
+  AdBanner,
   createLeisureSaasClient,
   useLeisureSaasAuth,
 } from "@leisuresaas/expo";
@@ -136,9 +136,9 @@ function Home() {
   const { resolveAccessToken } = useLeisureSaasAuth();
 
   return (
-    <LeisureAdsProvider client={client} resolveAccessToken={resolveAccessToken}>
-      <LeisureAdBanner />
-    </LeisureAdsProvider>
+    <AdsProvider client={client} resolveAccessToken={resolveAccessToken}>
+      <AdBanner />
+    </AdsProvider>
   );
 }
 ```
@@ -151,7 +151,7 @@ await client.recordAdEvents(token, [{ adId: ads[0].id, eventType: "impression" }
 // navigation: open ads[0].click_url (no Bearer)
 ```
 
-Plan permissions: `product.{slug}.ads.feed.read`, `product.{slug}.ads.events.write`.
+Plan permissions: **not required** for feed/events (Integration Auth only). Product backend manage APIs need OAuth scope `ads:manage`.
 
 ## Reference
 
