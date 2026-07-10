@@ -6,6 +6,7 @@ import type { AdCreativeStyles, AdLayoutStyles, AdsStateStyles, AdsTheme, AdRota
 
 export const defaultCreativeStyles = StyleSheet.create({
   root: {
+    position: "relative",
     overflow: "hidden",
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
@@ -44,9 +45,21 @@ export const defaultCreativeStyles = StyleSheet.create({
 export const defaultRotationStyles = StyleSheet.create({
   root: {},
   slide: {},
-  indicators: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 8 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#ccc" },
-  dotActive: { backgroundColor: "#111" },
+  indicators: {
+    position: "absolute",
+    right: 10,
+    bottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    zIndex: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.72)",
+  },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(0,0,0,0.28)" },
+  dotActive: { backgroundColor: "rgba(0,0,0,0.72)" },
 });
 
 export const defaultStateStyles = StyleSheet.create({
@@ -67,10 +80,10 @@ export const defaultStateStyles = StyleSheet.create({
 const textLayoutOverrides: Record<TextLayout, AdCreativeStyles> = {
   text_inline: {
     root: { borderRadius: 8, borderWidth: 0, backgroundColor: "#f4f4f5", paddingHorizontal: 14, paddingVertical: 12 },
-    content: { gap: 6 },
+    content: { gap: 4 },
     title: { fontSize: 14, fontWeight: "600" },
-    body: { fontSize: 13, lineHeight: 19 },
-    link: { marginTop: 2, fontWeight: "500" },
+    body: { fontSize: 14, lineHeight: 20, color: "#64748b" },
+    link: { marginTop: 8, fontWeight: "500" },
   },
   text_callout: {
     root: {
@@ -81,28 +94,29 @@ const textLayoutOverrides: Record<TextLayout, AdCreativeStyles> = {
       borderLeftColor: "#2563eb",
       backgroundColor: "#eff6ff",
       borderWidth: 0,
+      borderRadius: 8,
     },
-    title: { fontSize: 15, fontWeight: "700", color: "#1e3a8a" },
-    body: { fontSize: 13, color: "#334155", lineHeight: 19 },
-    link: { marginTop: 4, fontWeight: "600" },
+    title: { fontSize: 14, fontWeight: "700" },
+    body: { fontSize: 14, lineHeight: 20, color: "#64748b" },
+    link: { marginTop: 8, fontWeight: "600" },
   },
   text_footer: {
     root: {
-      paddingHorizontal: 14,
+      paddingHorizontal: 16,
       paddingVertical: 10,
-      borderRadius: 999,
-      backgroundColor: "#f8fafc",
-      borderColor: "#e2e8f0",
+      borderRadius: 8,
+      backgroundColor: "#f4f4f5",
+      borderColor: "#e4e4e7",
       alignItems: "center",
     },
-    title: { fontSize: 12, fontWeight: "500", color: "#475569", textAlign: "center", lineHeight: 17 },
+    title: { fontSize: 12, fontWeight: "500", color: "#64748b", textAlign: "center", lineHeight: 17 },
   },
   text_sidebar: {
     root: {
-      maxWidth: 280,
+      maxWidth: 320,
       paddingHorizontal: 12,
       paddingVertical: 12,
-      gap: 6,
+      gap: 4,
       borderTopWidth: 3,
       borderTopColor: "#2563eb",
       borderRadius: 8,
@@ -112,20 +126,20 @@ const textLayoutOverrides: Record<TextLayout, AdCreativeStyles> = {
     body: { fontSize: 12, lineHeight: 17, color: "#64748b" },
   },
   text_minimal: {
-    root: { paddingHorizontal: 2, paddingVertical: 6, borderWidth: 0, backgroundColor: "transparent" },
+    root: { paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, backgroundColor: "transparent" },
     link: { fontSize: 14, fontWeight: "500", color: "#2563eb" },
   },
 };
 
-const heroTitle: TextStyle = { fontSize: 15, fontWeight: "700", color: "#fff" };
-const heroBody: TextStyle = { fontSize: 12, color: "rgba(255,255,255,0.92)", lineHeight: 16 };
+const heroTitle: TextStyle = { fontSize: 14, fontWeight: "700", color: "#fff" };
+const heroBody: TextStyle = { fontSize: 12, color: "rgba(255,255,255,0.9)", lineHeight: 16 };
 
 const imageLayoutOverrides: Record<ImageLayout, AdCreativeStyles> = {
   image_hero: {
-    root: { position: "relative", paddingVertical: 0, paddingHorizontal: 0, borderWidth: 0, borderRadius: 12 },
+    root: { paddingVertical: 0, paddingHorizontal: 0, borderWidth: 0, borderRadius: 8 },
     media: { width: "100%" },
-    image: { width: "100%", height: 200 },
-    overlay: { paddingHorizontal: 16, paddingVertical: 14 },
+    image: { width: "100%", height: 144 },
+    overlay: { paddingHorizontal: 12, paddingVertical: 10 },
     title: heroTitle,
     body: heroBody,
   },
@@ -133,54 +147,52 @@ const imageLayoutOverrides: Record<ImageLayout, AdCreativeStyles> = {
     root: {
       paddingVertical: 0,
       paddingHorizontal: 0,
-      borderRadius: 16,
+      borderRadius: 8,
       borderWidth: 0,
       backgroundColor: "#fff",
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 3,
     },
-    media: { borderTopLeftRadius: 16, borderTopRightRadius: 16, overflow: "hidden" },
-    image: { width: "100%", height: 168 },
-    caption: { paddingHorizontal: 16, paddingVertical: 14, gap: 4 },
-    title: { fontSize: 15, fontWeight: "700" },
-    body: { fontSize: 13, lineHeight: 18 },
-    link: { marginTop: 4, fontWeight: "600" },
+    media: { overflow: "hidden" },
+    image: { width: "100%", height: 128 },
+    caption: { paddingHorizontal: 14, paddingVertical: 12, gap: 4 },
+    title: { fontSize: 14, fontWeight: "700" },
+    body: { fontSize: 14, lineHeight: 20, color: "#64748b" },
+    link: { paddingTop: 4, fontWeight: "600" },
   },
   image_strip: {
-    root: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12, borderRadius: 10 },
+    root: { padding: 12, borderRadius: 8 },
     media: { borderRadius: 8, overflow: "hidden" },
-    image: { width: 64, height: 64, borderRadius: 8 },
-    content: { flex: 1, gap: 2 },
+    image: { width: 56, height: 56, borderRadius: 8 },
+    content: { flex: 1, gap: 2, minWidth: 0 },
     title: { fontSize: 14, fontWeight: "600" },
     body: { fontSize: 12, lineHeight: 16, color: "#64748b" },
   },
   image_thumbnail: {
     root: {
-      maxWidth: 300,
-      flexDirection: "row",
-      alignItems: "flex-start",
+      maxWidth: 384,
       padding: 12,
-      gap: 12,
-      borderRadius: 10,
-      backgroundColor: "#fafafa",
+      borderRadius: 8,
+      borderWidth: 0,
+      backgroundColor: "#f4f4f5",
     },
-    media: { borderRadius: 10, overflow: "hidden" },
-    image: { width: 80, height: 80, borderRadius: 10 },
-    content: { flex: 1, gap: 4, paddingTop: 2 },
+    media: { borderRadius: 8, overflow: "hidden" },
+    image: { width: 64, height: 64, borderRadius: 8 },
+    content: { flex: 1, gap: 4 },
     title: { fontSize: 14, fontWeight: "700" },
-    body: { fontSize: 12, lineHeight: 17 },
-    link: { fontSize: 12, fontWeight: "600", marginTop: 2 },
+    body: { fontSize: 12, lineHeight: 17, color: "#64748b" },
+    link: { fontSize: 12, fontWeight: "600", marginTop: 4 },
   },
   image_inline: {
     root: { paddingVertical: 0, paddingHorizontal: 0, borderWidth: 0, backgroundColor: "transparent", gap: 8 },
-    media: { borderRadius: 10, overflow: "hidden" },
-    image: { width: "100%", height: 148, borderRadius: 10 },
-    caption: { paddingHorizontal: 2, paddingVertical: 0, gap: 4 },
+    media: { borderRadius: 8, overflow: "hidden" },
+    image: { width: "100%", height: 112, borderRadius: 8 },
+    caption: { paddingHorizontal: 0, paddingVertical: 0, gap: 4 },
     title: { fontSize: 14, fontWeight: "600" },
-    body: { fontSize: 13, color: "#64748b" },
+    body: { fontSize: 12, color: "#64748b" },
   },
 };
 
@@ -192,7 +204,20 @@ export const defaultAdsTheme: AdsTheme = {
 };
 
 function mergeCreative(base: AdCreativeStyles, ...layers: (AdCreativeStyles | undefined)[]): AdCreativeStyles {
-  return layers.reduce<AdCreativeStyles>((acc, layer) => ({ ...acc, ...layer }), { ...base });
+  const nestedKeys: (keyof AdCreativeStyles)[] = ["overlay", "caption", "media", "content"];
+
+  return layers.reduce<AdCreativeStyles>((acc, layer) => {
+    if (!layer) {
+      return acc;
+    }
+    const next = { ...acc, ...layer };
+    for (const key of nestedKeys) {
+      if (layer[key]) {
+        next[key] = { ...(acc[key] as object), ...(layer[key] as object) };
+      }
+    }
+    return next;
+  }, { ...base });
 }
 
 function buildTextLayouts(creative: AdCreativeStyles, patch?: AdLayoutStyles["text"]): Record<TextLayout, AdCreativeStyles> {

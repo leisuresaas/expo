@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Image, Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
 
 import type { AdFeedItem } from "../../types";
+import { AdRotationIndicators } from "../rotation/indicators";
+import { useAdRotationIndicators } from "../rotation/indicators-context";
 import type { AdCreativeStyles } from "../theme";
 
 export type LayoutShellProps = {
@@ -20,23 +22,30 @@ export function adLabel(ad: AdFeedItem): string {
 export function LayoutShell({
   ad, onPress, styles, contentStyle, children, accessibilityLabel,
 }: LayoutShellProps) {
+  const indicatorState = useAdRotationIndicators();
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.root, pressed && styles.pressed, contentStyle]}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? adLabel(ad)}
-    >
-      {children}
-    </Pressable>
+    <View style={[styles.root, contentStyle]}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [shellContentStyle, pressed && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? adLabel(ad)}
+      >
+        {children}
+      </Pressable>
+      {indicatorState ? <AdRotationIndicators state={indicatorState} /> : null}
+    </View>
   );
 }
 
-export function AdTitle({ text, styles }: { text?: string; styles: AdCreativeStyles }) {
+const shellContentStyle = { width: "100%" as const, position: "relative" as const };
+
+export function AdTitle({ text, styles, numberOfLines }: { text?: string; styles: AdCreativeStyles; numberOfLines?: number }) {
   if (!text) {
     return null;
   }
-  return <Text style={styles.title}>{text}</Text>;
+  return <Text style={styles.title} numberOfLines={numberOfLines}>{text}</Text>;
 }
 
 export function AdBody({ text, styles, numberOfLines }: { text?: string; styles: AdCreativeStyles; numberOfLines?: number }) {

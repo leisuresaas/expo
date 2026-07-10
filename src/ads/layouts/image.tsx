@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import type { ImageLayout } from "../constants";
 import type { AdCreativeStyles, AdLayoutRenderContext } from "../theme";
 import { AdBody, AdImage, AdLinkCta, AdTitle, LayoutShell } from "./shared";
+import { useAdRotationIndicators } from "../rotation/indicators-context";
 
 export type AdLayoutRendererProps = {
   ctx: AdLayoutRenderContext;
@@ -11,17 +12,19 @@ export type AdLayoutRendererProps = {
   contentStyle?: import("react-native").StyleProp<import("react-native").ViewStyle>;
 };
 
+const layoutRows = StyleSheet.create({
+  strip: { flexDirection: "row", alignItems: "center", gap: 12, width: "100%" },
+  thumbnail: { flexDirection: "row", alignItems: "flex-start", gap: 12, width: "100%" },
+});
+
 function ImageHeroLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
-  const hasCaption = !!(ctx.ad.title || ctx.ad.body_text);
   return (
     <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
       <AdImage uri={ctx.ad.image_url} styles={styles} />
-      {hasCaption ? (
-        <View style={styles.overlay}>
-          <AdTitle text={ctx.ad.title} styles={styles} />
-          <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={2} />
-        </View>
-      ) : null}
+      <View style={styles.overlay}>
+        <AdTitle text={ctx.ad.title} styles={styles} />
+        <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={2} />
+      </View>
     </LayoutShell>
   );
 }
@@ -40,25 +43,33 @@ function ImageCardLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
 }
 
 function ImageStripLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
+  const indicatorState = useAdRotationIndicators();
+
   return (
     <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
-      <AdImage uri={ctx.ad.image_url} styles={styles} />
-      <View style={styles.content}>
-        <AdTitle text={ctx.ad.title} styles={styles} />
-        <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={1} />
+      <View style={layoutRows.strip}>
+        <AdImage uri={ctx.ad.image_url} styles={styles} />
+        <View style={[styles.content, indicatorState ? stripIndicatorPad : null]}>
+          <AdTitle text={ctx.ad.title} styles={styles} numberOfLines={1} />
+          <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={1} />
+        </View>
       </View>
     </LayoutShell>
   );
 }
 
+const stripIndicatorPad = { paddingRight: 28 };
+
 function ImageThumbnailLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
     <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
-      <AdImage uri={ctx.ad.image_url} styles={styles} />
-      <View style={styles.content}>
-        <AdTitle text={ctx.ad.title} styles={styles} />
-        <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={2} />
-        <Text style={styles.link}>Open</Text>
+      <View style={layoutRows.thumbnail}>
+        <AdImage uri={ctx.ad.image_url} styles={styles} />
+        <View style={styles.content}>
+          <AdTitle text={ctx.ad.title} styles={styles} />
+          <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={2} />
+          <Text style={styles.link}>Open</Text>
+        </View>
       </View>
     </LayoutShell>
   );

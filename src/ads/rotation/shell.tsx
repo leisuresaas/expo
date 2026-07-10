@@ -1,9 +1,10 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Animated, Pressable, View } from "react-native";
+import { Animated, View } from "react-native";
 
 import type { AdFeedItem, AdFeedRotation } from "../../types";
 import { ROTATION_ANIM_MS, effectiveRotationMode, type AdRotationMode } from "../constants";
 import type { AdRotationStyles } from "../theme";
+import { AdRotationIndicatorsProvider, type AdRotationIndicatorState } from "./indicators-context";
 
 export type AdRotationShellProps = {
   ads: AdFeedItem[];
@@ -81,20 +82,17 @@ export function AdRotationShell({
     return null;
   }
 
+  const indicatorState: AdRotationIndicatorState | null = showIndicators && ads.length > 1
+    ? { ads, index, onIndexChange, styles }
+    : null;
+
   return (
     <View style={[styles.root, rootStyle]}>
-      <AnimatedSlide mode={mode} slideKey={ad.id} slideStyle={styles.slide}>
-        {renderSlide(ad, index)}
-      </AnimatedSlide>
-      {showIndicators && ads.length > 1 ? (
-        <View style={styles.indicators}>
-          {ads.map((item, i) => (
-            <Pressable key={item.id} onPress={() => onIndexChange(i)} hitSlop={8}>
-              <View style={[styles.dot, i === index && styles.dotActive]} />
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
+      <AdRotationIndicatorsProvider value={indicatorState}>
+        <AnimatedSlide mode={mode} slideKey={ad.id} slideStyle={styles.slide}>
+          {renderSlide(ad, index)}
+        </AnimatedSlide>
+      </AdRotationIndicatorsProvider>
     </View>
   );
 }
