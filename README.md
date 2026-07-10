@@ -120,7 +120,9 @@ await client.sendNotification(token, {
 
 ## Platform ads (UI components)
 
-`GET /ads/feed` returns **`click_url`** (platform tracking URL, often short `/c/{short_id}`). Clients open it for navigation; impressions use `POST /ads/events` with Bearer.
+> **AI 接入指南**（含 BFF、Manage、验收）：[plan/product-ads-integration.md](../../plan/product-ads-integration.md)
+
+`GET /ads/feed` returns **`click_url`** (platform tracking URL, often short `/c/{short_id}`). Clients open it for navigation; impressions use `POST /ads/events` with Bearer **and** `placement_key` / `group_id` (the `Ad` component sends these automatically).
 
 ```tsx
 import {
@@ -146,9 +148,14 @@ function Home() {
 Lower-level API (custom UI):
 
 ```ts
-const ads = await client.getAdsFeed(token, "home_banner");
-await client.recordAdEvents(token, [{ adId: ads[0].id, eventType: "impression" }]);
-// navigation: open ads[0].click_url (no Bearer)
+const feed = await client.getAdsFeed(token, "home_banner");
+await client.recordAdEvents(token, [{
+  adId: feed.ads[0].id,
+  eventType: "impression",
+  placementKey: feed.placement,
+  groupId: feed.source?.group_id ?? "",
+}]);
+// navigation: open feed.ads[0].click_url (no Bearer)
 ```
 
 Plan permissions: **not required** for feed/events (Integration Auth only). Product backend manage APIs need OAuth scope `ads:manage`.
