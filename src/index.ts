@@ -1,6 +1,47 @@
 export { buildAdClickUrl } from "./ads";
-export { Ad, AdBanner, AdsProvider, useAdsFeed } from "./ads-ui";
-export type { AdProps, AdsProviderProps, UseAdsFeedOptions, UseAdsFeedResult } from "./ads-ui";
+export {
+  Ad,
+  AdBanner,
+  AdFooter,
+  AdInline,
+  AdPreview,
+  AdSidebar,
+  AdsProvider,
+  defaultAdsTheme,
+  effectiveRotationMode,
+  layoutsForType,
+  defaultLayoutForType,
+  normalizeAdType,
+  normalizeLayout,
+  normalizeRotationMode,
+  useAdsFeed,
+  useAdRotation,
+  TEXT_LAYOUTS,
+  IMAGE_LAYOUTS,
+  AD_TYPES,
+} from "./ads-ui";
+export type {
+  AdCreativeStyles,
+  AdLayout,
+  AdLayoutRenderContext,
+  AdLayoutStyles,
+  AdPreviewProps,
+  AdProps,
+  AdRenderContext,
+  AdRotationMode,
+  AdRotationStyles,
+  AdSlotViewProps,
+  AdsProviderProps,
+  AdsTheme,
+  UseAdsFeedOptions,
+  UseAdsFeedResult,
+  UseAdRotationResult,
+  AdType,
+  TextLayout,
+  ImageLayout,
+  TextLayoutStyles,
+  ImageLayoutStyles,
+} from "./ads-ui";
 export { LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
 export type { LeisureSaasAuthContextValue, LeisureSaasAuthProviderProps } from "./auth";
 export { createLeisureSaasClient, LeisureSaasClient } from "./client";

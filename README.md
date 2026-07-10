@@ -120,9 +120,45 @@ await client.sendNotification(token, {
 
 ## Platform ads (UI components)
 
-> **AI 接入指南**（含 BFF、Manage、验收）：[plan/product-ads-integration.md](../../plan/product-ads-integration.md)
+> **AI 接入指南**：[plan/product-ads-integration.md](../../plan/product-ads-integration.md)
 
-`GET /ads/feed` returns **`click_url`** (platform tracking URL, often short `/c/{short_id}`). Clients open it for navigation; impressions use `POST /ads/events` with Bearer **and** `placement_key` / `group_id` (the `Ad` component sends these automatically).
+Feed returns `type` (`text` / `image`), type-specific `layout` (`text_*` / `image_*`), and `rotation` (none / fade / slide / stack). The SDK picks renderers from `type × layout`; customize via `AdsProvider theme` or per-`Ad` props.
+
+```tsx
+import {
+  AdsProvider,
+  AdBanner,
+  defaultAdsTheme,
+  createLeisureSaasClient,
+  useLeisureSaasAuth,
+} from "@leisuresaas/expo";
+
+const theme = {
+  layouts: {
+    image: { image_hero: { root: { borderRadius: 16 }, title: { color: "#111" } } },
+    text: { text_callout: { root: { borderLeftColor: "#2563eb" } } },
+  },
+  rotation: { dotActive: { backgroundColor: "#2563eb" } },
+};
+
+<AdsProvider client={client} resolveAccessToken={resolveAccessToken} theme={theme}>
+  <AdBanner contentStyle={{ marginVertical: 8 }} />
+</AdsProvider>
+```
+
+Custom render (full control, SDK still tracks impression / click):
+
+```tsx
+<Ad placement="home_banner" renderAd={({ ad, onPress, theme }) => (...)} />
+```
+
+**Preview without network** (labs / Storybook):
+
+```tsx
+<AdPreview feed={mockFeed} trackImpressions={false} showIndicators />
+```
+
+`GET /ads/feed` returns **`click_url`**. Clients open it for navigation; impressions use `POST /ads/events` with `placement_key` / `group_id` (the `Ad` component handles this after 300ms dwell).
 
 ```tsx
 import {
