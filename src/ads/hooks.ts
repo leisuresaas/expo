@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
-import type { LeisureSaasClient } from "../client";
 import type { AdFeedItem, AdFeedRotation } from "../types";
 import { IMPRESSION_MIN_DWELL_MS } from "./constants";
 import { useAdsContext } from "./context";
+import { getOrCreateAdsSessionId } from "./session-id";
 import type { UseAdsFeedOptions, UseAdsFeedResult } from "./theme";
 
 const impressionRecorded = new Set<string>();
 
 export function useAdsFeed(options: UseAdsFeedOptions = {}): UseAdsFeedResult {
-  const { client, resolveAccessToken } = useAdsContext();
+  const { client, resolveAccessToken, publicAds } = useAdsContext();
   const placement = options.placement ?? "home_banner";
   const enabled = options.enabled ?? true;
 
@@ -27,6 +27,15 @@ export function useAdsFeed(options: UseAdsFeedOptions = {}): UseAdsFeedResult {
     setLoading(true);
     setError(null);
     try {
+      if (publicAds) {
+        const next = await client.getPublicAdsFeed(publicAds, placement);
+        setFeed(next);
+        return;
+      }
+      if (!resolveAccessToken) {
+        setFeed(null);
+        return;
+      }
       const token = await resolveAccessToken();
       if (!token) {
         setFeed(null);
@@ -40,7 +49,7 @@ export function useAdsFeed(options: UseAdsFeedOptions = {}): UseAdsFeedResult {
     } finally {
       setLoading(false);
     }
-  }, [client, resolveAccessToken, placement, enabled]);
+  }, [client, resolveAccessToken, publicAds, placement, enabled]);
 
   useEffect(() => {
     void refresh();
@@ -112,9 +121,8 @@ export function useAdImpression(
   ad: AdFeedItem | null,
   placement: string,
   groupId: string,
-  client: LeisureSaasClient,
-  resolveAccessToken: () => Promise<string | null>,
 ) {
+  const { client, resolveAccessToken, publicAds } = useAdsContext();
   const sent = useRef<string>("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -135,13 +143,23 @@ export function useAdImpression(
       impressionRecorded.add(key);
       void (async () => {
         try {
+          const event = {
+            adId: ad.id, eventType: "impression" as const, placementKey: placement, groupId,
+          };
+          if (publicAds) {
+            const sessionId = await getOrCreateAdsSessionId();
+            const token = resolveAccessToken ? await resolveAccessToken() : null;
+            await client.recordPublicAdEvents(publicAds, sessionId, [event], token);
+            return;
+          }
+          if (!resolveAccessToken) {
+            return;
+          }
           const token = await resolveAccessToken();
           if (!token) {
             return;
           }
-          await client.recordAdEvents(token, [{
-            adId: ad.id, eventType: "impression", placementKey: placement, groupId,
-          }]);
+          await client.recordAdEvents(token, [event]);
         } catch (err) {
           console.warn("Ad: impression tracking failed", err);
         }
@@ -153,5 +171,5 @@ export function useAdImpression(
         timer.current = null;
       }
     };
-  }, [ad?.id, client, groupId, placement, resolveAccessToken]);
+  }, [ad?.id, client, groupId, placement, publicAds, resolveAccessToken]);
 }

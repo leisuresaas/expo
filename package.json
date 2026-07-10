@@ -1,7 +1,7 @@
 {
   "name": "@leisuresaas/expo",
-  "version": "0.3.2",
-  "description": "Expo SDK for LeisureSaas product OAuth and mobile billing (Integration API / BFF)",
+  "version": "0.4.0",
+  "description": "Expo SDK for LeisureSaas product OAuth, mobile billing, and Public Ads (publishableKey)",
   "license": "MIT",
   "repository": {
     "type": "git",

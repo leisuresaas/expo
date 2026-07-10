@@ -38,7 +38,7 @@ export function AdSlotView({
   renderAd,
   renderLayout,
 }: AdSlotViewProps) {
-  const { client, resolveAccessToken, providerTheme } = useAdsContext();
+  const { providerTheme } = useAdsContext();
   const ads = feed.ads ?? [];
   const rotation = feed.rotation;
   const adType = normalizeAdType(feed.type ?? ads[0]?.type);
@@ -55,8 +55,6 @@ export function AdSlotView({
     trackImpressions ? current : null,
     placement,
     feed.source?.group_id ?? "",
-    client,
-    resolveAccessToken,
   );
 
   const handlePress = useCallback(async (ad: AdFeedItem) => {

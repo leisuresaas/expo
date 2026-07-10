@@ -45,9 +45,12 @@ export type {
 export { LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
 export type { LeisureSaasAuthContextValue, LeisureSaasAuthProviderProps } from "./auth";
 export { createLeisureSaasClient, LeisureSaasClient } from "./client";
+export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
+export type { PublicAdsRequestContext } from "./public-ads";
 export { devAppleSignedTransaction, devDeviceToken, devGooglePurchaseToken } from "./dev";
 export { LeisureSaasHttpError } from "./errors";
 export { mobilePlatform } from "./platform";
+export { appBundleId } from "./ads/bundle-id";
 export type {
   AdEventInput,
   AdFeedItem,

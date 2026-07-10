@@ -54,11 +54,13 @@ export type BffClientConfig = {
   bffBaseUrl: string;
 };
 
-/** Direct gateway (dev / internal builds only — do not ship Integration Key in store apps). */
+  /** Direct gateway (dev / internal builds only — do not ship Integration Key in store apps). */
 export type GatewayClientConfig = {
   mode: "gateway";
   gatewayUrl: string;
   integrationApiKey: string;
+  /** Optional ads_pk for Public Ads API (safe to embed in client builds). */
+  publishableKey?: string;
 };
 
 export type LeisureSaasClientConfig = BffClientConfig | GatewayClientConfig;

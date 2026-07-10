@@ -92,6 +92,7 @@ Do **not** ship Integration API Key in App Store / Play builds.
 | `sendNotification` | ✅ | ✅ |
 | `getAdsFeed` | ✅ | ✅ |
 | `recordAdEvents` | ✅ | ✅ |
+| `getPublicAdsFeed` / `recordPublicAdEvents` | gateway URL + ads_pk | ✅ |
 | `getQuotaUsage` | ❌ (proxy on BFF) | ✅ |
 | `consumeQuota` | ❌ | ✅ |
 | `checkPermission` | ❌ | ✅ |
@@ -120,7 +121,57 @@ await client.sendNotification(token, {
 
 ## Platform ads (UI components)
 
-> **AI 接入指南**：[plan/product-ads-integration.md](../../plan/product-ads-integration.md)
+> **AI 接入指南**：[plan/product-ads-integration.md](../../plan/product-ads-integration.md)  
+> **Public Ads（v0.4.0+）**：未登录展示用 `publishableKey`；Integration feed 将于 2026-12-31 下线。
+
+### Public Ads（推荐 — 未登录可展示）
+
+```tsx
+import {
+  AdsProvider,
+  AdBanner,
+  createLeisureSaasClient,
+  useLeisureSaasAuth,
+} from "@leisuresaas/expo";
+
+const client = createLeisureSaasClient({ bffBaseUrl: "https://api.myproduct.com" });
+
+<AdsProvider
+  client={client}
+  publishableKey={process.env.EXPO_PUBLIC_ADS_PK!}
+  publicAdsGatewayUrl="https://gateway.example.com"
+  resolveAccessToken={resolveAccessToken}
+>
+  <AdBanner />
+</AdsProvider>
+```
+
+- `publishableKey`：Admin 创建的 `ads_pk_...`（可打进 App 包）
+- `publicAdsGatewayUrl`：gateway 根 URL（BFF 模式必填；gateway 模式可省略）
+- `resolveAccessToken` 可选；登录后 impression 可附带 user_id
+- `session_id` 由 SDK 自动生成并持久化（SecureStore）
+
+Lower-level:
+
+```ts
+import { getPublicAdsFeed, recordPublicAdEvents, mobilePlatform, appBundleId } from "@leisuresaas/expo";
+
+const ctx = {
+  gatewayUrl: "https://gateway.example.com",
+  publishableKey: "ads_pk_...",
+  platform: mobilePlatform(),
+  bundleId: appBundleId(),
+};
+const feed = await getPublicAdsFeed(ctx, "home_banner");
+await recordPublicAdEvents(ctx, sessionId, [{
+  adId: feed.ads[0].id,
+  eventType: "impression",
+  placementKey: feed.placement,
+  groupId: feed.source?.group_id ?? "",
+}]);
+```
+
+### Integration Ads（deprecated — 需登录）
 
 Feed returns `type` (`text` / `image`), type-specific `layout` (`text_*` / `image_*`), and `rotation` (none / fade / slide / stack). Each layout has a **dedicated renderer** (hero overlay, card shadow, footer pill, callout badge, etc.); customize via `AdsProvider theme` or per-`Ad` props.
 

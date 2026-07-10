@@ -1,4 +1,9 @@
 import { requestJson } from "./http";
+import {
+  getPublicAdsFeed,
+  recordPublicAdEvents,
+  type PublicAdsRequestContext,
+} from "./public-ads";
 import type {
   AdEventInput,
   AdFeedItem,
@@ -48,6 +53,7 @@ export class LeisureSaasClient {
   private readonly baseUrl: string;
   private readonly integrationPrefix: string;
   private readonly integrationApiKey?: string;
+  private readonly publishableKey?: string;
 
   constructor(config: LeisureSaasClientConfig) {
     this.mode = resolveMode(config);
@@ -56,6 +62,7 @@ export class LeisureSaasClient {
       this.baseUrl = trimSlash(gw.gatewayUrl);
       this.integrationPrefix = `${this.baseUrl}/api/v1/integration`;
       this.integrationApiKey = gw.integrationApiKey.trim();
+      this.publishableKey = gw.publishableKey?.trim() || undefined;
       if (!this.integrationApiKey) {
         throw new Error("LeisureSaasClient: integrationApiKey is required in gateway mode");
       }
@@ -64,6 +71,32 @@ export class LeisureSaasClient {
       this.baseUrl = trimSlash(bff.bffBaseUrl);
       this.integrationPrefix = "";
     }
+  }
+
+  /** Gateway base URL when in gateway mode (for Public Ads direct calls). */
+  gatewayBaseUrl(): string | undefined {
+    if (this.mode === "gateway") {
+      return this.baseUrl;
+    }
+    return undefined;
+  }
+
+  /** ads_pk from gateway client config, if any. */
+  configuredPublishableKey(): string | undefined {
+    return this.publishableKey;
+  }
+
+  getPublicAdsFeed(ctx: PublicAdsRequestContext, placement = "home_banner"): Promise<AdsFeedResponse> {
+    return getPublicAdsFeed(ctx, placement);
+  }
+
+  recordPublicAdEvents(
+    ctx: PublicAdsRequestContext,
+    sessionId: string,
+    events: AdEventInput[],
+    accessToken?: string | null,
+  ): Promise<number> {
+    return recordPublicAdEvents(ctx, sessionId, events, accessToken);
   }
 
   private async get<T>(
