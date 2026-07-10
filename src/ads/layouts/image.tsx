@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
+import { Text, View } from "react-native";
 
-import { AdCreativeView } from "../creative";
 import type { ImageLayout } from "../constants";
 import type { AdCreativeStyles, AdLayoutRenderContext } from "../theme";
+import { AdBody, AdImage, AdLinkCta, AdTitle, LayoutShell } from "./shared";
 
 export type AdLayoutRendererProps = {
   ctx: AdLayoutRenderContext;
@@ -10,68 +11,68 @@ export type AdLayoutRendererProps = {
   contentStyle?: import("react-native").StyleProp<import("react-native").ViewStyle>;
 };
 
-function ImageHeroLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function ImageHeroLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
+  const hasCaption = !!(ctx.ad.title || ctx.ad.body_text);
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="stacked"
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <AdImage uri={ctx.ad.image_url} styles={styles} />
+      {hasCaption ? (
+        <View style={styles.overlay}>
+          <AdTitle text={ctx.ad.title} styles={styles} />
+          <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={2} />
+        </View>
+      ) : null}
+    </LayoutShell>
   );
 }
 
-function ImageCardLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function ImageCardLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="stacked"
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <AdImage uri={ctx.ad.image_url} styles={styles} />
+      <View style={styles.caption}>
+        <AdTitle text={ctx.ad.title} styles={styles} />
+        <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={2} />
+        <AdLinkCta styles={styles} />
+      </View>
+    </LayoutShell>
   );
 }
 
-function ImageStripLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function ImageStripLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="compact"
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <AdImage uri={ctx.ad.image_url} styles={styles} />
+      <View style={styles.content}>
+        <AdTitle text={ctx.ad.title} styles={styles} />
+        <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={1} />
+      </View>
+    </LayoutShell>
   );
 }
 
-function ImageThumbnailLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function ImageThumbnailLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="row"
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <AdImage uri={ctx.ad.image_url} styles={styles} />
+      <View style={styles.content}>
+        <AdTitle text={ctx.ad.title} styles={styles} />
+        <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={2} />
+        <Text style={styles.link}>Open</Text>
+      </View>
+    </LayoutShell>
   );
 }
 
-function ImageInlineLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function ImageInlineLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="stacked"
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <AdImage uri={ctx.ad.image_url} styles={styles} />
+      <View style={styles.caption}>
+        <AdTitle text={ctx.ad.title} styles={styles} />
+        <AdBody text={ctx.ad.body_text} styles={styles} />
+      </View>
+    </LayoutShell>
   );
 }
 

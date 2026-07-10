@@ -11,7 +11,9 @@ export type AdCreativeStyles = {
   title?: TextStyle;
   body?: TextStyle;
   link?: TextStyle;
+  badge?: TextStyle;
   caption?: ViewStyle;
+  overlay?: ViewStyle;
   media?: ViewStyle;
   content?: ViewStyle;
 };

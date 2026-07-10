@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
+import { Text, View } from "react-native";
 
-import { AdCreativeView } from "../creative";
 import type { TextLayout } from "../constants";
 import type { AdCreativeStyles, AdLayoutRenderContext } from "../theme";
+import { AdBadge, AdBody, AdLinkCta, AdTitle, LayoutShell } from "./shared";
 
 export type AdLayoutRendererProps = {
   ctx: AdLayoutRenderContext;
@@ -10,73 +11,55 @@ export type AdLayoutRendererProps = {
   contentStyle?: import("react-native").StyleProp<import("react-native").ViewStyle>;
 };
 
-function TextInlineLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function TextInlineLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="inline"
-      showImage={false}
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <View style={styles.content}>
+        <AdTitle text={ctx.ad.title} styles={styles} />
+        <AdBody text={ctx.ad.body_text} styles={styles} />
+        <AdLinkCta styles={styles} />
+      </View>
+    </LayoutShell>
   );
 }
 
-function TextCalloutLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function TextCalloutLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="stacked"
-      showImage={false}
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <AdBadge styles={styles} />
+      <AdTitle text={ctx.ad.title} styles={styles} />
+      <AdBody text={ctx.ad.body_text} styles={styles} />
+      <AdLinkCta styles={styles} label="View details" />
+    </LayoutShell>
   );
 }
 
-function TextFooterLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function TextFooterLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
+  const line = [ctx.ad.title, ctx.ad.body_text].filter(Boolean).join(" · ");
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="compact"
-      showImage={false}
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <Text style={styles.title} numberOfLines={2}>{line || "Platform ad"}</Text>
+    </LayoutShell>
   );
 }
 
-function TextSidebarLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function TextSidebarLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="stacked"
-      showImage={false}
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <View style={styles.content}>
+        <AdTitle text={ctx.ad.title} styles={styles} />
+        <AdBody text={ctx.ad.body_text} styles={styles} numberOfLines={3} />
+      </View>
+    </LayoutShell>
   );
 }
 
-function TextMinimalLayout(props: AdLayoutRendererProps) {
-  const { ctx, styles, contentStyle } = props;
+function TextMinimalLayout({ ctx, styles, contentStyle }: AdLayoutRendererProps) {
+  const label = ctx.ad.title || ctx.ad.body_text || "Learn more";
   return (
-    <AdCreativeView
-      ad={ctx.ad}
-      onPress={ctx.onPress}
-      styles={styles}
-      contentStyle={contentStyle}
-      variant="text"
-      showImage={false}
-    />
+    <LayoutShell ad={ctx.ad} onPress={ctx.onPress} styles={styles} contentStyle={contentStyle}>
+      <Text style={styles.link}>{label} ›</Text>
+    </LayoutShell>
   );
 }
 

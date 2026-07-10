@@ -122,7 +122,7 @@ await client.sendNotification(token, {
 
 > **AI 接入指南**：[plan/product-ads-integration.md](../../plan/product-ads-integration.md)
 
-Feed returns `type` (`text` / `image`), type-specific `layout` (`text_*` / `image_*`), and `rotation` (none / fade / slide / stack). The SDK picks renderers from `type × layout`; customize via `AdsProvider theme` or per-`Ad` props.
+Feed returns `type` (`text` / `image`), type-specific `layout` (`text_*` / `image_*`), and `rotation` (none / fade / slide / stack). Each layout has a **dedicated renderer** (hero overlay, card shadow, footer pill, callout badge, etc.); customize via `AdsProvider theme` or per-`Ad` props.
 
 ```tsx
 import {
