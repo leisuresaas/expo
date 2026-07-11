@@ -261,7 +261,7 @@ Requires gateway **without** HTTP `group_id` alias (deploy gateway ≥ 2026-07 l
 npm install @leisuresaas/expo@0.5.0
 ```
 
-Go 后端配套：`go get github.com/leisuresaas/go@v0.1.44`（`platform.LineupIDFromSource`、`AdEventInput.LineupID`）。
+Go 后端配套：`go get github.com/leisuresaas/go@v0.1.45`（`platform.LineupIDFromSource`、`AdEventInput.LineupID`）。
 
 ## Reference
 
