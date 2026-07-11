@@ -167,7 +167,7 @@ await recordPublicAdEvents(ctx, sessionId, [{
   adId: feed.ads[0].id,
   eventType: "impression",
   placementKey: feed.placement,
-  groupId: feed.source?.group_id ?? "",
+  lineupId: feed.source?.lineup_id ?? feed.source?.group_id ?? "",
 }]);
 ```
 
@@ -209,7 +209,7 @@ Custom render (full control, SDK still tracks impression / click):
 <AdPreview feed={mockFeed} trackImpressions={false} showIndicators />
 ```
 
-`GET /ads/feed` returns **`click_url`**. Clients open it for navigation; impressions use `POST /ads/events` with `placement_key` / `group_id` (the `Ad` component handles this after 300ms dwell).
+`GET /ads/feed` returns **`click_url`**. Clients open it for navigation; impressions use `POST /ads/events` with `placement_key` / `lineup_id` (the `Ad` component handles this after 300ms dwell).
 
 ```tsx
 import {
@@ -240,7 +240,7 @@ await client.recordAdEvents(token, [{
   adId: feed.ads[0].id,
   eventType: "impression",
   placementKey: feed.placement,
-  groupId: feed.source?.group_id ?? "",
+  lineupId: feed.source?.lineup_id ?? feed.source?.group_id ?? "",
 }]);
 // navigation: open feed.ads[0].click_url (no Bearer)
 ```
