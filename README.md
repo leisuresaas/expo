@@ -167,7 +167,7 @@ await recordPublicAdEvents(ctx, sessionId, [{
   adId: feed.ads[0].id,
   eventType: "impression",
   placementKey: feed.placement,
-  lineupId: feed.source?.lineup_id ?? feed.source?.group_id ?? "",
+  lineupId: feed.source?.lineup_id ?? "",
 }]);
 ```
 
@@ -240,7 +240,7 @@ await client.recordAdEvents(token, [{
   adId: feed.ads[0].id,
   eventType: "impression",
   placementKey: feed.placement,
-  lineupId: feed.source?.lineup_id ?? feed.source?.group_id ?? "",
+  lineupId: feed.source?.lineup_id ?? "",
 }]);
 // navigation: open feed.ads[0].click_url (no Bearer)
 ```

@@ -306,7 +306,7 @@ export class LeisureSaasClient {
     }
     const payload = {
       events: events.map((ev) => {
-        const lineupId = (ev.lineupId ?? ev.groupId ?? "").trim();
+        const lineupId = ev.lineupId?.trim() ?? "";
         return {
           ad_id: ev.adId,
           event_type: ev.eventType,

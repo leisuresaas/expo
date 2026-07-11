@@ -134,7 +134,6 @@ export type AdFeedRotation = {
 export type AdFeedSource = {
   kind: string;
   lineup_id?: string;
-  group_id?: string;
   scope: string;
   overridden?: boolean;
 };
@@ -153,6 +152,4 @@ export type AdEventInput = {
   eventType: "impression";
   placementKey?: string;
   lineupId?: string;
-  /** @deprecated use lineupId */
-  groupId?: string;
 };
