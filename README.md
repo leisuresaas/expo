@@ -154,7 +154,7 @@ const client = createLeisureSaasClient({ bffBaseUrl: "https://api.myproduct.com"
 Lower-level:
 
 ```ts
-import { getPublicAdsFeed, recordPublicAdEvents, mobilePlatform, appBundleId } from "@leisuresaas/expo";
+import { getPublicAdsFeed, recordPublicAdEvents, lineupIdFromSource, mobilePlatform, appBundleId } from "@leisuresaas/expo";
 
 const ctx = {
   gatewayUrl: "https://gateway.example.com",
@@ -167,7 +167,7 @@ await recordPublicAdEvents(ctx, sessionId, [{
   adId: feed.ads[0].id,
   eventType: "impression",
   placementKey: feed.placement,
-  lineupId: feed.source?.lineup_id ?? "",
+  lineupId: lineupIdFromSource(feed.source),
 }]);
 ```
 
@@ -240,12 +240,28 @@ await client.recordAdEvents(token, [{
   adId: feed.ads[0].id,
   eventType: "impression",
   placementKey: feed.placement,
-  lineupId: feed.source?.lineup_id ?? "",
+  lineupId: lineupIdFromSource(feed.source),
 }]);
 // navigation: open feed.ads[0].click_url (no Bearer)
 ```
 
 Plan permissions: **not required** for feed/events (Integration Auth only). Product backend manage APIs need OAuth scope `ads:manage`.
+
+## Upgrade `@leisuresaas/expo@0.5.0` (breaking — lineup_id)
+
+Requires gateway **without** HTTP `group_id` alias (deploy gateway ≥ 2026-07 lineup_id-only).
+
+| 变更 | 迁移 |
+|------|------|
+| `AdFeedSource.group_id` | 使用 `lineup_id`；`lineupIdFromSource(feed.source)` |
+| `AdEventInput.groupId` | 改为 `lineupId` |
+| Impression payload | 只发 `lineup_id`（SDK 内置；自定义 UI 勿再发 `group_id`） |
+
+```bash
+npm install @leisuresaas/expo@0.5.0
+```
+
+Go 后端配套：`go get github.com/leisuresaas/go@v0.1.44`（`platform.LineupIDFromSource`、`AdEventInput.LineupID`）。
 
 ## Reference
 

@@ -46,6 +46,7 @@ export { LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
 export type { LeisureSaasAuthContextValue, LeisureSaasAuthProviderProps } from "./auth";
 export { createLeisureSaasClient, LeisureSaasClient } from "./client";
 export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
+export { lineupIdFromSource } from "./ads/lineup-id";
 export type { PublicAdsRequestContext } from "./public-ads";
 export { devAppleSignedTransaction, devDeviceToken, devGooglePurchaseToken } from "./dev";
 export { LeisureSaasHttpError } from "./errors";
