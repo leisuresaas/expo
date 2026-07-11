@@ -120,7 +120,7 @@ export function useAdRotation({ ads, rotation, enabled = true }: UseAdRotationOp
 export function useAdImpression(
   ad: AdFeedItem | null,
   placement: string,
-  groupId: string,
+  lineupId: string,
 ) {
   const { client, resolveAccessToken, publicAds } = useAdsContext();
   const sent = useRef<string>("");
@@ -144,7 +144,7 @@ export function useAdImpression(
       void (async () => {
         try {
           const event = {
-            adId: ad.id, eventType: "impression" as const, placementKey: placement, groupId,
+            adId: ad.id, eventType: "impression" as const, placementKey: placement, lineupId,
           };
           if (publicAds) {
             const sessionId = await getOrCreateAdsSessionId();
@@ -171,5 +171,5 @@ export function useAdImpression(
         timer.current = null;
       }
     };
-  }, [ad?.id, client, groupId, placement, publicAds, resolveAccessToken]);
+  }, [ad?.id, client, lineupId, placement, publicAds, resolveAccessToken]);
 }

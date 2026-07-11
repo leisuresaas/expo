@@ -305,12 +305,15 @@ export class LeisureSaasClient {
       return Promise.resolve(0);
     }
     const payload = {
-      events: events.map((ev) => ({
-        ad_id: ev.adId,
-        event_type: ev.eventType,
-        ...(ev.placementKey ? { placement_key: ev.placementKey } : {}),
-        ...(ev.groupId ? { group_id: ev.groupId } : {}),
-      })),
+      events: events.map((ev) => {
+        const lineupId = (ev.lineupId ?? ev.groupId ?? "").trim();
+        return {
+          ad_id: ev.adId,
+          event_type: ev.eventType,
+          ...(ev.placementKey ? { placement_key: ev.placementKey } : {}),
+          ...(lineupId ? { lineup_id: lineupId } : {}),
+        };
+      }),
     };
     return this.post<{ recorded: number }>(
       accessToken,

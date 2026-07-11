@@ -6,6 +6,7 @@ import { normalizeAdType, normalizeLayout } from "./constants";
 import { useAdsContext } from "./context";
 import { layoutStylesFor, resolveAdsTheme } from "./default-theme";
 import { useAdImpression, useAdRotation } from "./hooks";
+import { lineupIdFromSource } from "./lineup-id";
 import { renderLayoutByKey } from "./layouts";
 import { openAdClickUrl } from "./open-click";
 import { AdRotationShell } from "./rotation/shell";
@@ -54,7 +55,7 @@ export function AdSlotView({
   useAdImpression(
     trackImpressions ? current : null,
     placement,
-    feed.source?.group_id ?? "",
+    lineupIdFromSource(feed.source),
   );
 
   const handlePress = useCallback(async (ad: AdFeedItem) => {
