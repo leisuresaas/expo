@@ -1,6 +1,6 @@
 {
   "name": "@leisuresaas/expo",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Expo SDK for LeisureSaas product OAuth, mobile billing, and Public Ads (publishableKey)",
   "license": "MIT",
   "repository": {

@@ -4,6 +4,7 @@ import {
   recordPublicAdEvents,
   type PublicAdsRequestContext,
 } from "./public-ads";
+import { adsSurfaceHeaders } from "./platform";
 import type {
   AdEventInput,
   AdFeedItem,
@@ -297,6 +298,7 @@ export class LeisureSaasClient {
       accessToken,
       `/api/v1/ads/feed?placement=${q}`,
       `/ads/feed?placement=${q}`,
+      adsSurfaceHeaders(),
     ).then((r) => ({ ...r, ads: r.ads ?? [] }));
   }
 
@@ -320,6 +322,7 @@ export class LeisureSaasClient {
       "/api/v1/ads/events",
       "/ads/events",
       payload,
+      adsSurfaceHeaders(),
     ).then((r) => r.recorded ?? 0);
   }
 

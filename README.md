@@ -154,12 +154,12 @@ const client = createLeisureSaasClient({ bffBaseUrl: "https://api.myproduct.com"
 Lower-level:
 
 ```ts
-import { getPublicAdsFeed, recordPublicAdEvents, lineupIdFromSource, mobilePlatform, appBundleId } from "@leisuresaas/expo";
+import { getPublicAdsFeed, recordPublicAdEvents, lineupIdFromSource, adsSurfaceKey, appBundleId } from "@leisuresaas/expo";
 
 const ctx = {
   gatewayUrl: "https://gateway.example.com",
   publishableKey: "ads_pk_...",
-  platform: mobilePlatform(),
+  surfaceKey: adsSurfaceKey(),
   bundleId: appBundleId(),
 };
 const feed = await getPublicAdsFeed(ctx, "home_banner");
@@ -262,6 +262,27 @@ npm install @leisuresaas/expo@0.5.0
 ```
 
 Go 后端配套：`go get github.com/leisuresaas/go@v0.1.45`（`platform.LineupIDFromSource`、`AdEventInput.LineupID`）。
+
+## Upgrade `@leisuresaas/expo@0.5.1` (fix — surface_key header)
+
+Gateway Public / Integration ads 已改用 **`X-Ads-Surface-Key`**（`0.5.0` 仍发 `X-Ads-Platform` 会导致 feed 失败）。
+
+| 变更 | 迁移 |
+|------|------|
+| Public Ads 请求头 | `X-Ads-Platform` → **`X-Ads-Surface-Key`** |
+| `PublicAdsRequestContext.platform` | 改为 **`surfaceKey`**（`platform` 仍可读作 fallback） |
+| Integration `getAdsFeed` / `recordAdEvents` | SDK 自动附带 `X-Ads-Surface-Key: ios\|android` |
+
+```bash
+npm install @leisuresaas/expo@0.5.1
+```
+
+```ts
+import { adsSurfaceKey } from "@leisuresaas/expo";
+
+// PublicAdsRequestContext
+{ surfaceKey: adsSurfaceKey(), publishableKey: "ads_pk_...", gatewayUrl: "..." }
+```
 
 ## Reference
 

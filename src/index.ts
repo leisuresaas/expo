@@ -50,7 +50,7 @@ export { lineupIdFromSource } from "./ads/lineup-id";
 export type { PublicAdsRequestContext } from "./public-ads";
 export { devAppleSignedTransaction, devDeviceToken, devGooglePurchaseToken } from "./dev";
 export { LeisureSaasHttpError } from "./errors";
-export { mobilePlatform } from "./platform";
+export { mobilePlatform, adsSurfaceKey, adsSurfaceHeaders } from "./platform";
 export { appBundleId } from "./ads/bundle-id";
 export type {
   AdEventInput,

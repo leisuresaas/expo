@@ -140,6 +140,7 @@ export type AdFeedSource = {
 
 export type AdsFeedResponse = {
   placement: string;
+  surface_key?: string;
   type?: string;
   layout?: string;
   source?: AdFeedSource;

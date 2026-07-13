@@ -1,10 +1,14 @@
 import { LeisureSaasHttpError } from "./errors";
+import { adsSurfaceKey } from "./platform";
 import type { AdEventInput, AdsFeedResponse, MobilePlatform } from "./types";
 
 export type PublicAdsRequestContext = {
   gatewayUrl: string;
   publishableKey: string;
-  platform: MobilePlatform | "web";
+  /** Surface key sent as X-Ads-Surface-Key (e.g. ios, android, web). */
+  surfaceKey?: MobilePlatform | "web";
+  /** @deprecated Use surfaceKey. Gateway requires X-Ads-Surface-Key since v0.5.1. */
+  platform?: MobilePlatform | "web";
   bundleId?: string;
   origin?: string;
 };
@@ -13,13 +17,18 @@ function trimSlash(url: string): string {
   return url.replace(/\/$/, "");
 }
 
+function resolveSurfaceKey(ctx: PublicAdsRequestContext): MobilePlatform | "web" {
+  return ctx.surfaceKey ?? ctx.platform ?? adsSurfaceKey();
+}
+
 function publicAdsHeaders(ctx: PublicAdsRequestContext, accessToken?: string): Record<string, string> {
+  const surfaceKey = resolveSurfaceKey(ctx);
   const headers: Record<string, string> = {
     Accept: "application/json",
     "X-Ads-Publishable-Key": ctx.publishableKey.trim(),
-    "X-Ads-Platform": ctx.platform,
+    "X-Ads-Surface-Key": surfaceKey,
   };
-  if (ctx.platform === "web") {
+  if (surfaceKey === "web") {
     if (ctx.origin?.trim()) {
       headers.Origin = ctx.origin.trim();
     }

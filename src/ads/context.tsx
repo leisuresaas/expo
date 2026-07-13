@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import type { LeisureSaasClient } from "../client";
 import type { PublicAdsRequestContext } from "../public-ads";
-import { mobilePlatform } from "../platform";
+import { adsSurfaceKey } from "../platform";
 import { appBundleId } from "./bundle-id";
 import type { AdsTheme } from "./theme";
 
@@ -43,7 +43,7 @@ export function AdsProvider({
       publicAds = {
         gatewayUrl,
         publishableKey: key,
-        platform: mobilePlatform(),
+        surfaceKey: adsSurfaceKey(),
         bundleId: appBundleId(),
       };
     }
