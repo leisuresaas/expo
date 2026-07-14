@@ -126,11 +126,12 @@ await client.sendNotification(token, {
 
 未登录冷启动 / 回前台检查更新（`app_cfg_pk`）。客户端**不要**自写 semver，只读 `update.required` / `update.recommended`。
 
+**Settings UI 由产品自绘**（headless）：SDK 只提供状态与动作；样式跟产品设置页一致。
+
 ```tsx
 import {
   AppUpdateProvider,
-  AppVersionSettingsCard,
-  useAppUpdate,
+  useAppVersionSettings,
 } from "@leisuresaas/expo";
 
 <AppUpdateProvider
@@ -140,8 +141,33 @@ import {
   {children}
 </AppUpdateProvider>
 
-// Settings
-<AppVersionSettingsCard />
+// Settings — product-owned layout
+function AppVersionSection() {
+  const s = useAppVersionSettings();
+  return (
+    <YourCard>
+      <YourTitle>{s.labels.settingsTitle}</YourTitle>
+      <YourMuted>{s.displayVersion}</YourMuted>
+      {s.message ? <YourBody>{s.message}</YourBody> : null}
+      <YourRow>
+        <YourLink onPress={() => void s.checkNow()} disabled={s.busy}>
+          {s.busy || s.status === "checking" ? s.labels.checking : s.labels.checkForUpdates}
+        </YourLink>
+        {s.canOpenStore ? (
+          <YourLink onPress={() => void s.openStore()}>{s.labels.openStore}</YourLink>
+        ) : null}
+      </YourRow>
+    </YourCard>
+  );
+}
+```
+
+可选参考实现（无样式承诺）：`<AppVersionSettingsCard />`，或 render prop：
+
+```tsx
+<AppVersionSettingsCard>
+  {(s) => <YourCard>{/* same fields as above */}</YourCard>}
+</AppVersionSettingsCard>
 ```
 
 | Env | 说明 |
@@ -149,7 +175,7 @@ import {
 | `EXPO_PUBLIC_APP_CFG_PK` | Admin Access → Publishable keys（App config） |
 | `EXPO_PUBLIC_OAUTH_ISSUER` | Gateway 根 URL（与 OAuth issuer 同主机即可） |
 
-可选：`labels` 覆盖弹窗文案；`skipInDev` / `skipOnWeb`（默认 `__DEV__` 与 Web 不弹窗）。`required` 不可 dismiss；`recommended` 按 `latest_version` 持久化 dismiss（SecureStore）。
+可选：`labels` 覆盖弹窗文案；`onUpdateRequired` / `onUpdateRecommended` 自定义冷启动弹窗；`skipInDev` / `skipOnWeb`（默认 `__DEV__` 与 Web 不弹窗）。`required` 不可 dismiss；`recommended` 按 `latest_version` 持久化 dismiss（SecureStore）。
 
 ## Platform ads (UI components)
 
@@ -295,13 +321,26 @@ npm install @leisuresaas/expo@0.5.0
 
 Go 后端配套：`go get github.com/leisuresaas/go@v0.1.45`（`platform.LineupIDFromSource`、`AdEventInput.LineupID`）。
 
+## Upgrade `@leisuresaas/expo@0.5.4` (feat — headless App version Settings)
+
+设置页改为 **headless-first**：产品自绘 UI，不再依赖默认卡片样式。
+
+| 新增 | 用法 |
+|------|------|
+| `useAppVersionSettings` | 设置页主路径：`displayVersion` / `checkNow` / `openStore` / `message` / `canOpenStore` |
+| `AppVersionSettingsCard` children render prop | `(state) => ReactNode`；无 children 时仍为参考布局 |
+
+```bash
+npm install @leisuresaas/expo@0.5.4
+```
+
 ## Upgrade `@leisuresaas/expo@0.5.2` (feat — App version updates)
 
 Public App Config：冷启动 / 设置页版本检查（服务端 semver）。
 
 | 新增 | 用法 |
 |------|------|
-| `AppUpdateProvider` / `useAppUpdate` / `AppVersionSettingsCard` | 见上文 [App version updates](#app-version-updates-public-app-config) |
+| `AppUpdateProvider` / `useAppUpdate` / `AppVersionSettingsCard` | 见上文 [App version updates](#app-version-updates-public-app-config)；Settings 推荐 `useAppVersionSettings`（0.5.4+） |
 | `EXPO_PUBLIC_APP_CFG_PK` | Admin Access → Publishable keys（App config） |
 
 ```bash

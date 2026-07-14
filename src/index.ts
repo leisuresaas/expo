@@ -53,12 +53,15 @@ export {
   AppUpdateProvider,
   AppVersionSettingsCard,
   useAppUpdate,
+  useAppVersionSettings,
 } from "./app-update/context";
 export type {
   AppUpdateInfo,
   AppUpdateLabels,
   AppUpdateProviderProps,
   AppUpdateStatus,
+  AppVersionSettingsCardProps,
+  AppVersionSettingsState,
 } from "./app-update/context";
 export { lineupIdFromSource } from "./ads/lineup-id";
 export { devAppleSignedTransaction, devDeviceToken, devGooglePurchaseToken } from "./dev";

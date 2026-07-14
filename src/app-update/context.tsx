@@ -41,6 +41,25 @@ export type AppUpdateLabels = {
   checkFailed?: string;
 };
 
+/** Headless Settings-page state: product owns all UI; SDK owns check / store actions. */
+export type AppVersionSettingsState = {
+  status: AppUpdateStatus;
+  displayVersion: string;
+  message: string | null;
+  busy: boolean;
+  canOpenStore: boolean;
+  checkNow: () => Promise<void>;
+  openStore: () => Promise<void>;
+  labels: Required<AppUpdateLabels>;
+  info: AppUpdateInfo | null;
+  error: string | null;
+};
+
+export type AppVersionSettingsCardProps = {
+  /** Custom Settings UI; omit to use the unstyled reference layout. */
+  children?: (state: AppVersionSettingsState) => ReactNode;
+};
+
 const defaultLabels: Required<AppUpdateLabels> = {
   requiredTitle: "Update required",
   recommendedTitle: "Update available",
@@ -275,18 +294,22 @@ export function useAppUpdate(): AppUpdateContextValue {
   return ctx;
 }
 
-export function AppVersionSettingsCard() {
+/**
+ * Settings-page headless API: version display + manual check + open store.
+ * Prefer this over `AppVersionSettingsCard` when matching product branding.
+ */
+export function useAppVersionSettings(): AppVersionSettingsState {
   const { status, displayVersion, checkForUpdate, openStore, info, error, labels } = useAppUpdate();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  async function onCheck() {
+  const checkNow = useCallback(async () => {
     setBusy(true);
     setMessage(null);
     try {
       const next = await checkForUpdate({ fresh: true });
       if (!next) {
-        setMessage(error || labels.checkFailed);
+        setMessage(labels.checkFailed);
         return;
       }
       if (next.update.required || next.update.recommended) {
@@ -297,8 +320,36 @@ export function AppVersionSettingsCard() {
     } finally {
       setBusy(false);
     }
-  }
+  }, [checkForUpdate, labels.checkFailed, labels.recommendedTitle, labels.upToDate]);
 
+  const canOpenStore = Boolean(info?.update.required || info?.update.recommended);
+
+  return useMemo(
+    (): AppVersionSettingsState => ({
+      status,
+      displayVersion,
+      message,
+      busy,
+      canOpenStore,
+      checkNow,
+      openStore,
+      labels,
+      info,
+      error,
+    }),
+    [status, displayVersion, message, busy, canOpenStore, checkNow, openStore, labels, info, error],
+  );
+}
+
+/**
+ * Optional reference Settings UI (unstyled). Prefer `useAppVersionSettings` + product layout.
+ * Pass `children` as a render prop for full visual control without rewriting check logic.
+ */
+export function AppVersionSettingsCard({ children }: AppVersionSettingsCardProps) {
+  const state = useAppVersionSettings();
+  if (children) return <>{children(state)}</>;
+
+  const { status, displayVersion, message, busy, canOpenStore, checkNow, openStore, labels } = state;
   return (
     <View style={{ gap: 8, paddingVertical: 8 }}>
       <Text style={{ fontSize: 16, fontWeight: "600" }}>{labels.settingsTitle}</Text>
@@ -306,13 +357,13 @@ export function AppVersionSettingsCard() {
       {message ? <Text>{message}</Text> : null}
       <View style={{ flexDirection: "row", gap: 12 }}>
         <Pressable
-          onPress={() => void onCheck()}
+          onPress={() => void checkNow()}
           disabled={busy || status === "checking"}
           style={{ paddingVertical: 8, paddingHorizontal: 12, opacity: busy ? 0.5 : 1 }}
         >
           <Text>{busy || status === "checking" ? labels.checking : labels.checkForUpdates}</Text>
         </Pressable>
-        {info?.update.required || info?.update.recommended ? (
+        {canOpenStore ? (
           <Pressable onPress={() => void openStore()} style={{ paddingVertical: 8, paddingHorizontal: 12 }}>
             <Text>{labels.openStore}</Text>
           </Pressable>

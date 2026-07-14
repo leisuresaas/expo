@@ -65,7 +65,9 @@ export async function getPublicAppConfig(
     headers["Cache-Control"] = "no-cache";
   }
 
-  let url = `${trimSlash(ctx.gatewayUrl)}/api/v1/public/app-config`;
+  // Trailing slash: some gateways 301 …/app-config → …/app-config/ with a root-relative
+  // Location that drops the /gateway prefix and breaks fetch redirect (404).
+  let url = `${trimSlash(ctx.gatewayUrl)}/api/v1/public/app-config/`;
   if (input.fresh) {
     url += "?fresh=1";
   }
