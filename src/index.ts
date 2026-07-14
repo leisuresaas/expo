@@ -56,6 +56,7 @@ export {
 } from "./app-update/context";
 export type {
   AppUpdateInfo,
+  AppUpdateLabels,
   AppUpdateProviderProps,
   AppUpdateStatus,
 } from "./app-update/context";
