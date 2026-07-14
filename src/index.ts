@@ -46,8 +46,20 @@ export { LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
 export type { LeisureSaasAuthContextValue, LeisureSaasAuthProviderProps } from "./auth";
 export { createLeisureSaasClient, LeisureSaasClient } from "./client";
 export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
-export { lineupIdFromSource } from "./ads/lineup-id";
 export type { PublicAdsRequestContext } from "./public-ads";
+export { getPublicAppConfig } from "./public-app-config";
+export type { AppConfigResponse, PublicAppConfigRequestContext } from "./public-app-config";
+export {
+  AppUpdateProvider,
+  AppVersionSettingsCard,
+  useAppUpdate,
+} from "./app-update/context";
+export type {
+  AppUpdateInfo,
+  AppUpdateProviderProps,
+  AppUpdateStatus,
+} from "./app-update/context";
+export { lineupIdFromSource } from "./ads/lineup-id";
 export { devAppleSignedTransaction, devDeviceToken, devGooglePurchaseToken } from "./dev";
 export { LeisureSaasHttpError } from "./errors";
 export { mobilePlatform, adsSurfaceKey, adsSurfaceHeaders } from "./platform";
