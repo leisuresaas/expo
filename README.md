@@ -1,6 +1,6 @@
 # @leisuresaas/expo
 
-Expo / React Native SDK for LeisureSaas **product OAuth**, **mobile billing**, and **platform ads** (catalog plans, store confirm/restore, subscription, ad banners).
+Expo / React Native SDK for LeisureSaas **product OAuth**, **mobile billing**, **platform ads**, and **app version updates** (catalog plans, store confirm/restore, subscription, ad banners, `AppUpdateProvider`).
 
 Mirrors [`sdk/go`](../go) Integration API surface for Expo apps. Production apps should call a **product BFF** that holds the Integration API Key; use **gateway mode** only for local dev.
 
@@ -118,6 +118,38 @@ await client.sendNotification(token, {
   vars: { message: "Hello from Expo" },
 });
 ```
+
+## App version updates (Public App Config)
+
+> **AI 接入指南**：[plan/product-app-config-integration.md](../../plan/product-app-config-integration.md)  
+> **平台方案**：[plan/app-config-platform.md](../../plan/app-config-platform.md)
+
+未登录冷启动 / 回前台检查更新（`app_cfg_pk`）。客户端**不要**自写 semver，只读 `update.required` / `update.recommended`。
+
+```tsx
+import {
+  AppUpdateProvider,
+  AppVersionSettingsCard,
+  useAppUpdate,
+} from "@leisuresaas/expo";
+
+<AppUpdateProvider
+  publishableKey={process.env.EXPO_PUBLIC_APP_CFG_PK!}
+  gatewayUrl={process.env.EXPO_PUBLIC_OAUTH_ISSUER!}
+>
+  {children}
+</AppUpdateProvider>
+
+// Settings
+<AppVersionSettingsCard />
+```
+
+| Env | 说明 |
+|-----|------|
+| `EXPO_PUBLIC_APP_CFG_PK` | Admin Access → Publishable keys（App config） |
+| `EXPO_PUBLIC_OAUTH_ISSUER` | Gateway 根 URL（与 OAuth issuer 同主机即可） |
+
+可选：`labels` 覆盖弹窗文案；`skipInDev` / `skipOnWeb`（默认 `__DEV__` 与 Web 不弹窗）。`required` 不可 dismiss；`recommended` 按 `latest_version` 持久化 dismiss（SecureStore）。
 
 ## Platform ads (UI components)
 
@@ -287,6 +319,8 @@ import { adsSurfaceKey } from "@leisuresaas/expo";
 ## Reference
 
 - [PUBLIC_PUBLISHING.md](./PUBLIC_PUBLISHING.md) — 公开发布到 npmjs.com
+- [plan/product-app-config-integration.md](../../plan/product-app-config-integration.md) — App 版本更新
+- [plan/product-ads-integration.md](../../plan/product-ads-integration.md) — 运营广告
 - [PUBLISHING.md](./PUBLISHING.md) — 私有发布（Git tag / GitHub Packages）
 - [demo/mobile](../../demo/mobile) — sample Expo app
 - [plan/openapi/integration-quota.yaml](../../plan/openapi/integration-quota.yaml)
