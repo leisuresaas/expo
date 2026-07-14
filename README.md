@@ -295,6 +295,19 @@ npm install @leisuresaas/expo@0.5.0
 
 Go 后端配套：`go get github.com/leisuresaas/go@v0.1.45`（`platform.LineupIDFromSource`、`AdEventInput.LineupID`）。
 
+## Upgrade `@leisuresaas/expo@0.5.2` (feat — App version updates)
+
+Public App Config：冷启动 / 设置页版本检查（服务端 semver）。
+
+| 新增 | 用法 |
+|------|------|
+| `AppUpdateProvider` / `useAppUpdate` / `AppVersionSettingsCard` | 见上文 [App version updates](#app-version-updates-public-app-config) |
+| `EXPO_PUBLIC_APP_CFG_PK` | Admin Access → Publishable keys（App config） |
+
+```bash
+npm install @leisuresaas/expo@0.5.2
+```
+
 ## Upgrade `@leisuresaas/expo@0.5.1` (fix — surface_key header)
 
 Gateway Public / Integration ads 已改用 **`X-Ads-Surface-Key`**（`0.5.0` 仍发 `X-Ads-Platform` 会导致 feed 失败）。
