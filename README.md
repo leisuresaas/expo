@@ -1,8 +1,17 @@
 # @leisuresaas/expo
 
-Expo / React Native SDK for LeisureSaas **product OAuth**, **mobile billing**, **platform ads**, and **app version updates** (catalog plans, store confirm/restore, subscription, ad banners, `AppUpdateProvider`).
+Expo / React Native SDK for LeisureSaas **product OAuth**, **mobile billing**, **platform ads**, **app version updates**, and **notifications** (device token + send via product BFF / Integration).
 
 Mirrors [`sdk/go`](../go) Integration API surface for Expo apps. Production apps should call a **product BFF** that holds the Integration API Key; use **gateway mode** only for local dev.
+
+**Push（定稿）**：使用**原生** FCM/APNs token。推荐：
+
+```ts
+await client.enablePush(accessToken);   // 权限 + getDevicePushTokenAsync + Register(+meta)
+await client.disablePush(accessToken);  // 注销当前原生 token
+```
+
+需要 peer `expo-notifications`，且必须是 Dev Client / Store 构建（**不要** Expo Go / `getExpoPushTokenAsync` / `ExponentPushToken`）。产品须在 Admin 上传自有 FCM/APNs（Credential Vault）。详见 [plan/services/notification-platform.md](../../plan/services/notification-platform.md)。
 
 ## Install
 
@@ -25,7 +34,7 @@ npm install @leisuresaas/expo
 }
 ```
 
-Peer dependencies: `expo`, `expo-auth-session`, `expo-secure-store`, `expo-web-browser`, `react`, `react-native`.
+Peer dependencies: `expo`, `expo-auth-session`, `expo-secure-store`, `expo-web-browser`, `react`, `react-native`；Push 还需可选 peer `expo-notifications`。
 
 ## Quick start (BFF — recommended)
 
@@ -88,6 +97,7 @@ Do **not** ship Integration API Key in App Store / Play builds.
 | `confirmGooglePurchase` | ✅ | ✅ |
 | `restoreApplePurchases` | ✅ | ✅ |
 | `registerDeviceToken` | ✅ | ✅ |
+| `enablePush` / `disablePush` | ✅ | ✅ |
 | `unregisterDeviceToken` | ✅ | ✅ |
 | `sendNotification` | ✅ | ✅ |
 | `getAdsFeed` | ✅ | ✅ |
@@ -109,15 +119,14 @@ await client.confirmApplePurchase(token, {
   storeProductId: "com.example.pro.monthly",
 });
 
-await client.registerDeviceToken(token, {
-  platform: mobilePlatform(),
-  token: devDeviceToken(mobilePlatform()),
-});
+await client.enablePush(token);
 await client.sendNotification(token, {
   templateKey: "product_alert",
   vars: { message: "Hello from Expo" },
 });
 ```
+
+> `enablePush()` 需要 Dev Client / Store build + `expo-notifications`。`devDeviceToken` 仅本地冒烟，不能验收真机推送。
 
 ## App version updates (Public App Config)
 

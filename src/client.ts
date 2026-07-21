@@ -5,12 +5,14 @@ import {
   type PublicAdsRequestContext,
 } from "./public-ads";
 import { adsSurfaceHeaders } from "./platform";
+import { buildEnablePushRegistration, fetchNativeDevicePushToken } from "./push";
 import type {
   AdEventInput,
   AdFeedItem,
   AdsFeedResponse,
   AppleConfirmInput,
   DeviceTokenResult,
+  EnablePushOptions,
   Entitlement,
   GatewayClientConfig,
   GoogleConfirmInput,
@@ -275,12 +277,34 @@ export class LeisureSaasClient {
     accessToken: string,
     input: RegisterDeviceTokenInput,
   ): Promise<DeviceTokenResult> {
+    const body: Record<string, string> = {
+      platform: input.platform,
+      token: input.token,
+    };
+    if (input.androidPackage) body.android_package = input.androidPackage;
+    if (input.bundleId) body.bundle_id = input.bundleId;
+    if (input.environment) body.environment = input.environment;
     return this.post<DeviceTokenResult>(
       accessToken,
       "/api/v1/notifications/device-tokens",
       "/notifications/device-tokens",
-      { platform: input.platform, token: input.token },
+      body,
     );
+  }
+
+  /**
+   * Request notification permission, fetch the native FCM/APNs device token, and register it.
+   * Requires peer dependency `expo-notifications` (and a Dev Client / Store build — not Expo Go).
+   */
+  async enablePush(accessToken: string, opts?: EnablePushOptions): Promise<DeviceTokenResult> {
+    const input = await buildEnablePushRegistration(opts);
+    return this.registerDeviceToken(accessToken, input);
+  }
+
+  /** Unregister the current native device push token (or an explicit token). */
+  async disablePush(accessToken: string, token?: string): Promise<DeviceTokenResult> {
+    const value = (token ?? (await fetchNativeDevicePushToken())).trim();
+    return this.unregisterDeviceToken(accessToken, value);
   }
 
   unregisterDeviceToken(accessToken: string, token: string): Promise<DeviceTokenResult> {

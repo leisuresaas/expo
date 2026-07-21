@@ -80,6 +80,16 @@ export type GoogleConfirmInput = {
 export type RegisterDeviceTokenInput = {
   platform: MobilePlatform;
   token: string;
+  androidPackage?: string;
+  bundleId?: string;
+  environment?: "development" | "production";
+};
+
+export type EnablePushOptions = {
+  platform?: MobilePlatform;
+  androidPackage?: string;
+  bundleId?: string;
+  environment?: "development" | "production";
 };
 
 export type SendNotificationInput = {

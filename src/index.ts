@@ -77,6 +77,7 @@ export type {
   AppleConfirmInput,
   BffClientConfig,
   DeviceTokenResult,
+  EnablePushOptions,
   Entitlement,
   GatewayClientConfig,
   GoogleConfirmInput,
