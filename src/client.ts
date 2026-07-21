@@ -363,6 +363,12 @@ export class LeisureSaasClient {
     if (input.locale?.trim()) {
       body.locale = input.locale.trim();
     }
+    if (input.channel?.trim()) {
+      body.channel = input.channel.trim();
+    }
+    if (input.toEmail?.trim()) {
+      body.to_email = input.toEmail.trim();
+    }
     if (input.vars && Object.keys(input.vars).length > 0) {
       body.vars = input.vars;
     }

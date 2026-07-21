@@ -95,15 +95,24 @@ export type EnablePushOptions = {
 export type SendNotificationInput = {
   templateKey: string;
   userId?: string;
+  channel?: "email" | "push" | "inbox";
+  toEmail?: string;
   locale?: string;
   vars?: Record<string, string>;
   idempotencyKey?: string;
 };
 
-export type SendNotificationResult = {
-  delivery_id?: string;
+export type ChannelSendResult = {
+  channel?: string;
   status?: string;
+  delivery_id?: string;
   recipient_count?: number;
+  error?: string;
+};
+
+export type SendNotificationResult = {
+  status?: string;
+  results?: ChannelSendResult[];
 };
 
 export type DeviceTokenResult = {
