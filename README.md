@@ -118,6 +118,7 @@ await client.confirmApplePurchase(token, {
   signedTransaction: devAppleSignedTransaction("com.example.pro.monthly"),
   storeProductId: "com.example.pro.monthly",
 });
+// Treat success only when the response includes a non-empty order_id.
 
 await client.enablePush(token);
 await client.sendNotification(token, {
