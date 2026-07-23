@@ -1,5 +1,6 @@
 import { LeisureSaasHttpError } from "./errors";
 import { adsSurfaceKey } from "./platform";
+import { applyPublishableKeyHeaders } from "./publishable-key";
 import type { AdEventInput, AdsFeedResponse, MobilePlatform } from "./types";
 
 export type PublicAdsRequestContext = {
@@ -25,9 +26,9 @@ function publicAdsHeaders(ctx: PublicAdsRequestContext, accessToken?: string): R
   const surfaceKey = resolveSurfaceKey(ctx);
   const headers: Record<string, string> = {
     Accept: "application/json",
-    "X-Ads-Publishable-Key": ctx.publishableKey.trim(),
     "X-Ads-Surface-Key": surfaceKey,
   };
+  applyPublishableKeyHeaders(headers, ctx.publishableKey, "X-Ads-Publishable-Key");
   if (surfaceKey === "web") {
     if (ctx.origin?.trim()) {
       headers.Origin = ctx.origin.trim();

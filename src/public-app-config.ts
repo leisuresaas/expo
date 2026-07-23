@@ -1,5 +1,6 @@
 import { LeisureSaasHttpError } from "./errors";
 import { mobilePlatform } from "./platform";
+import { applyPublishableKeyHeaders } from "./publishable-key";
 import type { MobilePlatform } from "./types";
 
 export type PublicAppConfigRequestContext = {
@@ -46,10 +47,10 @@ export async function getPublicAppConfig(
   const platform = resolvePlatform(ctx);
   const headers: Record<string, string> = {
     Accept: "application/json",
-    "X-App-Cfg-Publishable-Key": ctx.publishableKey.trim(),
     "X-Client-Platform": platform,
     "X-App-Version": input.appVersion.trim(),
   };
+  applyPublishableKeyHeaders(headers, ctx.publishableKey, "X-App-Cfg-Publishable-Key");
   if (input.appBuild?.trim()) {
     headers["X-App-Build"] = input.appBuild.trim();
   }

@@ -56,6 +56,7 @@ export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
 export type { PublicAdsRequestContext } from "./public-ads";
 export { getPublicAppConfig } from "./public-app-config";
 export type { AppConfigResponse, PublicAppConfigRequestContext } from "./public-app-config";
+export { applyPublishableKeyHeaders, resolvePublishableKeyFromEnv } from "./publishable-key";
 export {
   AppUpdateProvider,
   AppVersionSettingsCard,
