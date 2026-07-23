@@ -127,6 +127,8 @@ export type LeisureSaasAuthConfig = {
   scopes?: string[];
   storageKey?: string;
   refreshStorageKey?: string;
+  /** When true (default), Universal Links to Hosted UI reset-password open In-App Browser. */
+  handlePasswordResetLinks?: boolean;
 };
 
 export type AdFeedItem = {

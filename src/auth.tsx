@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { accessNeedsRefresh, refreshOAuthTokens } from "./auth-session";
+import { useHostedUIPasswordResetLink } from "./hosted-ui-link";
 import type { LeisureSaasAuthConfig } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -45,6 +46,7 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
     scheme: config.redirectScheme,
     path: config.redirectPath ?? "auth/callback",
   });
+  useHostedUIPasswordResetLink(config.handlePasswordResetLinks !== false);
   const discovery = useMemo(
     () => ({
       authorizationEndpoint: `${issuer}/oauth/authorize`,

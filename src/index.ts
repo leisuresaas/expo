@@ -44,6 +44,12 @@ export type {
 } from "./ads-ui";
 export { LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
 export type { LeisureSaasAuthContextValue, LeisureSaasAuthProviderProps } from "./auth";
+export {
+  handleHostedUILink,
+  isHostedUIPasswordResetURL,
+  openHostedUIInApp,
+  useHostedUIPasswordResetLink,
+} from "./hosted-ui-link";
 export { createLeisureSaasClient, LeisureSaasClient } from "./client";
 export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
 export type { PublicAdsRequestContext } from "./public-ads";

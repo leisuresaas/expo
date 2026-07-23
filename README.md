@@ -74,6 +74,16 @@ function Home() {
 
 Register OAuth redirect URI in Admin: `{scheme}://auth/callback` (from `makeRedirectUri`).
 
+Also register `{scheme}://auth/password-reset-done` (or same scheme) so Hosted UI can return after password reset.
+
+### Password reset deep link (Universal Links)
+
+When the user taps a password-reset email link, iOS/Android should open your App (Associated Domains / App Links on the Hosted UI host). `LeisureSaasAuthProvider` then opens the same HTTPS URL in an In-App Browser (`terminal=mobile` Hosted UI).
+
+1. Admin → Product → Domains → **App Links**: set `app_scheme`, iOS Team/Bundle, Android package + SHA-256.
+2. Expo `app.json`: `scheme`, `ios.associatedDomains` (`applinks:{slug}.hosted-ui…`), Android `intentFilters` with `autoVerify`.
+3. Keep `handlePasswordResetLinks` enabled (default) on `LeisureSaasAuthProvider`, or call `handleHostedUILink(url)` yourself.
+
 ## Gateway mode (dev only)
 
 ```ts
