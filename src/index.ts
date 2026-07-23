@@ -46,6 +46,7 @@ export { LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
 export type { LeisureSaasAuthContextValue, LeisureSaasAuthProviderProps } from "./auth";
 export {
   handleHostedUILink,
+  hostedUIURLFromAppOpenLink,
   isHostedUIPasswordResetURL,
   openHostedUIInApp,
   useHostedUIPasswordResetLink,

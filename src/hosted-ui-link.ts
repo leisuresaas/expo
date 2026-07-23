@@ -13,6 +13,40 @@ export function isHostedUIPasswordResetURL(url: string): boolean {
   }
 }
 
+/** True when deep link path is auth/open (custom scheme from Hosted UI). */
+function isAppOpenPath(url: string): boolean {
+  try {
+    const parsed = Linking.parse(url);
+    const host = (parsed.hostname ?? "").replace(/^\//, "");
+    const path = (parsed.path ?? "").replace(/^\//, "");
+    if (host === "auth" && (path === "open" || path === "")) {
+      return true;
+    }
+    return path === "auth/open" || path.endsWith("/auth/open");
+  } catch {
+    return false;
+  }
+}
+
+/** HTTPS page URL embedded in `{scheme}://auth/open?url=…`. */
+export function hostedUIURLFromAppOpenLink(url: string): string | null {
+  if (!isAppOpenPath(url)) {
+    return null;
+  }
+  try {
+    const parsed = Linking.parse(url);
+    const q = parsed.queryParams?.url;
+    const embedded = typeof q === "string" ? q : Array.isArray(q) ? q[0] : "";
+    const trimmed = (embedded ?? "").trim();
+    if (!trimmed || !/^https:\/\//i.test(trimmed)) {
+      return null;
+    }
+    return trimmed;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Open Hosted UI password-reset (or other identity) URL inside an in-app browser.
  * Pass the HTTPS Universal Link / App Link URL unchanged — do not strip token.
@@ -28,8 +62,17 @@ export async function openHostedUIInApp(url: string): Promise<void> {
   });
 }
 
-/** Handle an incoming deep link: if it is a password-reset Hosted UI URL, open In-App Browser. */
+/**
+ * Handle an incoming deep link:
+ * - HTTPS Hosted UI reset-password → In-App Browser
+ * - `{scheme}://auth/open?url=https…` → In-App Browser with embedded URL
+ */
 export async function handleHostedUILink(url: string): Promise<boolean> {
+  const fromOpen = hostedUIURLFromAppOpenLink(url);
+  if (fromOpen) {
+    await openHostedUIInApp(fromOpen);
+    return true;
+  }
   if (!isHostedUIPasswordResetURL(url)) {
     return false;
   }
@@ -38,7 +81,7 @@ export async function handleHostedUILink(url: string): Promise<boolean> {
 }
 
 /**
- * Subscribe to cold-start + foreground Universal Links for Hosted UI reset-password.
+ * Subscribe to cold-start + foreground links for Hosted UI reset-password / auth/open.
  * Call once near the app root (e.g. inside LeisureSaasAuthProvider children).
  */
 export function useHostedUIPasswordResetLink(enabled = true): void {
