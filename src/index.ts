@@ -49,6 +49,8 @@ export type {
   LeisureSaasAuthContextValue,
   LeisureSaasAuthProviderProps,
 } from "./auth";
+export { fetchUserInfo } from "./userinfo";
+export type { UserInfo } from "./userinfo";
 export {
   handleHostedUILink,
   hostedUIURLFromAppOpenLink,

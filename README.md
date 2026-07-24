@@ -95,6 +95,19 @@ When the user taps a password-reset email link, iOS/Android should open your App
 
 > Deprecated aliases: `LeisureSaasAuthProvider` / `useLeisureSaasAuth` still export to `AuthProvider` / `useAuth`.
 
+### OIDC UserInfo
+
+After login, fetch profile from the platform issuer (not by inventing email→user APIs):
+
+```ts
+import { fetchUserInfo } from "@leisuresaas/expo";
+
+const user = await fetchUserInfo(issuer, accessToken);
+// user.sub, user.email, user.name
+```
+
+Token response may also include `id_token` when scope includes `openid` (verify with JWKS).
+
 ## Gateway mode (dev only)
 
 ```ts
