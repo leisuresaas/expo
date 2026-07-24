@@ -157,15 +157,19 @@ export class LeisureSaasClient {
     });
   }
 
-  listPlans(accessToken: string, platform: MobilePlatform): Promise<Plan[]> {
+  listPlans(accessToken: string, platform: MobilePlatform, locale?: string): Promise<Plan[]> {
+    const localeQ = locale?.trim() ? `&locale=${encodeURIComponent(locale.trim())}` : "";
     if (this.mode === "bff") {
       return this.get<{ plans: Plan[] }>(
         accessToken,
-        `/api/v1/plans?platform=${encodeURIComponent(platform)}`,
+        `/api/v1/plans?platform=${encodeURIComponent(platform)}${localeQ}`,
         "/catalog/plans",
       ).then((r) => r.plans ?? []);
     }
-    return this.get<{ plans: Plan[] }>(accessToken, "", "/catalog/plans", {
+    const path = locale?.trim()
+      ? `/catalog/plans?locale=${encodeURIComponent(locale.trim())}`
+      : "/catalog/plans";
+    return this.get<{ plans: Plan[] }>(accessToken, "", path, {
       "X-Client-Platform": platform,
     }).then((r) => r.plans ?? []);
   }

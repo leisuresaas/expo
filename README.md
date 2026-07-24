@@ -124,7 +124,7 @@ Do **not** ship Integration API Key in App Store / Play builds.
 
 | Method | BFF | Gateway |
 |--------|-----|---------|
-| `listPlans(token, platform)` | ✅ | ✅ |
+| `listPlans(token, platform, locale?)` | ✅ | ✅ |
 | `getSubscription(token)` | ✅ | ✅ |
 | `getEntitlement(token)` | ✅ | ✅ |
 | `confirmApplePurchase` | ✅ | ✅ |

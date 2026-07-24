@@ -4,6 +4,8 @@ export type Plan = {
   plan_id: string;
   name: string;
   code?: string;
+  description?: string;
+  includes?: { text: string; href?: string; accent?: boolean }[];
   plan_version_id?: string;
   payment_channel?: string;
   is_current?: boolean;
