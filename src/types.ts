@@ -136,7 +136,8 @@ export type AuthConfig = {
   terminal?: "mobile" | "web";
   /**
    * Hosted UI UI language (BCP 47). Sent as OIDC `ui_locales` on authorize and used to
-   * rewrite Hosted UI HTTPS paths opened via deep link (e.g. `zh-CN` → `/{locale}/…`).
+   * rewrite Hosted UI HTTPS paths opened via deep link (e.g. `de` → `/de/…`).
+   * Invalid tags fall back to `en` (no closed locale allow-list in the SDK).
    */
   locale?: string;
   /** When true (default), Universal Links to Hosted UI reset-password open In-App Browser. */

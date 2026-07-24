@@ -19,7 +19,7 @@ import {
   authSetItem,
   isWebProduction,
 } from "./auth-storage";
-import { useHostedUIPasswordResetLink } from "./hosted-ui-link";
+import { normalizeHostedUILocale, useHostedUIPasswordResetLink } from "./hosted-ui-link";
 import type { AuthConfig } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -50,7 +50,8 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
   const storageKey = config.storageKey ?? "leisuresaas_access_token";
   const refreshStorageKey = config.refreshStorageKey ?? DEFAULT_REFRESH_STORAGE_KEY;
   const terminal = config.terminal ?? DEFAULT_TERMINAL;
-  const uiLocale = config.locale?.trim() ?? "";
+  // Any BCP 47 tag; invalid/empty→ omitted (or normalize to en when provided but invalid).
+  const uiLocale = config.locale?.trim() ? normalizeHostedUILocale(config.locale) : "";
   const redirectUri = AuthSession.makeRedirectUri({
     scheme: config.redirectScheme,
     path: config.redirectPath ?? "auth/callback",

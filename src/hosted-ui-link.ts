@@ -2,27 +2,58 @@ import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
 
-const HOSTED_UI_LOCALES = new Set(["en", "zh-CN"]);
+/** Default Hosted UI path locale when tag is missing/invalid. */
+export const DEFAULT_HOSTED_UI_LOCALE = "en";
 
-/** Map BCP 47-ish tag onto Hosted UI path locales. */
-export function normalizeHostedUILocale(raw?: string | null): string {
-  const v = (raw ?? "").trim().replace(/_/g, "-");
-  if (!v) {
-    return "";
+const BCP47_RE = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
+
+/** True when a path segment looks like a BCP 47 language tag (no support whitelist). */
+export function isLocalePathSegment(raw?: string | null): boolean {
+  const v = (raw ?? "").trim();
+  return Boolean(v) && BCP47_RE.test(v) && v.length <= 32;
+}
+
+/** Canonicalize BCP 47-ish tag (language lower, region upper). */
+function canonicalizeBcp47(raw: string): string {
+  const parts = raw.trim().split("-").filter(Boolean);
+  if (parts.length === 0) {
+    return DEFAULT_HOSTED_UI_LOCALE;
   }
-  const lower = v.toLowerCase();
-  if (lower === "en" || lower === "en-us" || lower === "en-gb") {
-    return "en";
-  }
-  if (lower === "zh" || lower === "zh-cn" || lower === "zh-hans" || lower === "zh-hans-cn") {
-    return "zh-CN";
-  }
-  for (const canonical of HOSTED_UI_LOCALES) {
-    if (canonical.toLowerCase() === lower) {
-      return canonical;
+  const out = [parts[0]!.toLowerCase()];
+  for (const part of parts.slice(1)) {
+    if (part.length === 2 && /^[A-Za-z]{2}$/.test(part)) {
+      out.push(part.toUpperCase());
+    } else if (part.length === 4 && /^[A-Za-z]{4}$/.test(part)) {
+      out.push(part[0]!.toUpperCase() + part.slice(1).toLowerCase());
+    } else {
+      out.push(part.toLowerCase());
     }
   }
-  return "";
+  return out.join("-");
+}
+
+/**
+ * Map BCP 47-ish tag onto a Hosted UI path locale.
+ * No support whitelist: any valid tag is accepted (with common aliases).
+ * Missing/invalid tags fall back to {@link DEFAULT_HOSTED_UI_LOCALE} (`en`).
+ */
+export function normalizeHostedUILocale(raw?: string | null): string {
+  const v = (raw ?? "").trim().replace(/_/g, "-");
+  if (!v || !isLocalePathSegment(v)) {
+    return DEFAULT_HOSTED_UI_LOCALE;
+  }
+  const lower = v.toLowerCase();
+  // Convenient aliases for Hosted UI path conventions (not a closed allow-list).
+  if (lower === "en" || lower.startsWith("en-")) {
+    return "en";
+  }
+  if (lower === "zh" || lower.startsWith("zh-")) {
+    return "zh-CN";
+  }
+  if (lower === "de" || lower.startsWith("de-")) {
+    return "de";
+  }
+  return canonicalizeBcp47(v);
 }
 
 function pathSegments(url: string): string[] {
@@ -47,7 +78,7 @@ export function isHostedUIPasswordResetURL(url: string): boolean {
 /** True when URL is Hosted UI `/{locale}/open` handoff. */
 export function isHostedUIOpenHandoffURL(url: string): boolean {
   const segs = pathSegments(url);
-  if (segs.length >= 2 && normalizeHostedUILocale(segs[0]) && segs[1] === "open") {
+  if (segs.length >= 2 && isLocalePathSegment(segs[0]) && segs[1] === "open") {
     return true;
   }
   return segs.length === 1 && segs[0] === "open";
@@ -135,17 +166,17 @@ export function withTerminalMobile(url: string): string {
   }
 }
 
-/** Rewrite Hosted UI path locale segment (insert or replace). */
+/** Rewrite Hosted UI path locale segment (insert or replace). Invalid locale → `en`. */
 export function withHostedUILocale(url: string, locale?: string | null): string {
-  const normalized = normalizeHostedUILocale(locale);
   const trimmed = url.trim();
-  if (!normalized || !trimmed || !/^https?:\/\//i.test(trimmed)) {
+  if (locale == null || !String(locale).trim() || !trimmed || !/^https?:\/\//i.test(trimmed)) {
     return trimmed;
   }
+  const normalized = normalizeHostedUILocale(locale);
   try {
     const u = new URL(trimmed);
     const segs = u.pathname.split("/").filter(Boolean);
-    if (segs.length > 0 && normalizeHostedUILocale(segs[0])) {
+    if (segs.length > 0 && isLocalePathSegment(segs[0])) {
       segs[0] = normalized;
     } else {
       segs.unshift(normalized);
@@ -165,7 +196,7 @@ export type OpenHostedUIInAppOptions = {
  * Open Hosted UI identity URL inside an in-app browser.
  * Pass the HTTPS Universal Link / App Link URL unchanged — do not strip token.
  * Adds `terminal=mobile` when missing so Hosted UI uses the compact layout.
- * Optionally rewrites path locale to match the app language.
+ * Optionally rewrites path locale to match the app language (unsupported/invalid → `en`).
  * Never opens `/open` itself — resolves `next` to the business page first.
  */
 export async function openHostedUIInApp(url: string, opts?: OpenHostedUIInAppOptions): Promise<void> {

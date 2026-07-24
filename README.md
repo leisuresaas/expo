@@ -59,6 +59,7 @@ export function App() {
         clientId: "my-app-mobile",
         redirectScheme: "myapp",
         terminal: "mobile", // Hosted UI compact layout (default)
+        // locale: "de", // BCP 47; invalid tags fall back to en (no SDK allow-list)
       }}
     >
       <Home />

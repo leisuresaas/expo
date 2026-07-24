@@ -52,11 +52,13 @@ export type {
 export { fetchUserInfo } from "./userinfo";
 export type { UserInfo } from "./userinfo";
 export {
+  DEFAULT_HOSTED_UI_LOCALE,
   handleHostedUILink,
   hostedUIURLFromAppOpenLink,
   hostedUIURLFromOpenHandoff,
   isHostedUIOpenHandoffURL,
   isHostedUIPasswordResetURL,
+  isLocalePathSegment,
   normalizeHostedUILocale,
   openHostedUIInApp,
   useHostedUIPasswordResetLink,
