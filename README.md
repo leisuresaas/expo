@@ -112,7 +112,7 @@ Do **not** ship Integration API Key in App Store / Play builds.
 | `sendNotification` | ✅ | ✅ |
 | `getAdsFeed` | ✅ | ✅ |
 | `recordAdEvents` | ✅ | ✅ |
-| `getPublicAdsFeed` / `recordPublicAdEvents` | gateway URL + ads_pk | ✅ |
+| `getPublicAdsFeed` / `recordPublicAdEvents` | gateway URL + `pk_live_` | ✅ |
 | `getQuotaUsage` | ❌ (proxy on BFF) | ✅ |
 | `consumeQuota` | ❌ | ✅ |
 | `checkPermission` | ❌ | ✅ |
@@ -323,7 +323,7 @@ await client.recordAdEvents(token, [{
 // navigation: open feed.ads[0].click_url (no Bearer)
 ```
 
-Plan permissions: **not required** for feed/events (Integration Auth only). Product backend manage APIs need OAuth scope `ads:manage`.
+Plan permissions: **not required** for feed/events (Integration Auth only). Product backend manage APIs need Integration Key scope `ads:manage` (machine tokens OK).
 
 ## Upgrade `@leisuresaas/expo@0.5.0` (breaking — lineup_id)
 

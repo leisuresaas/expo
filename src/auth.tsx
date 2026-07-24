@@ -18,7 +18,7 @@ import type { LeisureSaasAuthConfig } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const DEFAULT_SCOPES = ["openid", "profile", "entitlement:read", "billing:read", "billing:store"];
+const DEFAULT_SCOPES = ["openid", "profile"];
 const DEFAULT_REFRESH_STORAGE_KEY = "leisuresaas_refresh_token";
 
 export type LeisureSaasAuthContextValue = {
