@@ -50,11 +50,12 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
   const storageKey = config.storageKey ?? "leisuresaas_access_token";
   const refreshStorageKey = config.refreshStorageKey ?? DEFAULT_REFRESH_STORAGE_KEY;
   const terminal = config.terminal ?? DEFAULT_TERMINAL;
+  const uiLocale = config.locale?.trim() ?? "";
   const redirectUri = AuthSession.makeRedirectUri({
     scheme: config.redirectScheme,
     path: config.redirectPath ?? "auth/callback",
   });
-  useHostedUIPasswordResetLink(config.handlePasswordResetLinks !== false);
+  useHostedUIPasswordResetLink(config.handlePasswordResetLinks !== false, uiLocale || undefined);
   const discovery = useMemo(
     () => ({
       authorizationEndpoint: `${issuer}/oauth/authorize`,
@@ -145,7 +146,10 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
       scopes,
-      extraParams: { terminal },
+      extraParams: {
+        terminal,
+        ...(uiLocale ? { ui_locales: uiLocale } : {}),
+      },
     },
     discovery,
   );

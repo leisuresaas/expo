@@ -54,9 +54,13 @@ export type { UserInfo } from "./userinfo";
 export {
   handleHostedUILink,
   hostedUIURLFromAppOpenLink,
+  hostedUIURLFromOpenHandoff,
+  isHostedUIOpenHandoffURL,
   isHostedUIPasswordResetURL,
+  normalizeHostedUILocale,
   openHostedUIInApp,
   useHostedUIPasswordResetLink,
+  withHostedUILocale,
   withTerminalMobile,
 } from "./hosted-ui-link";
 export { createLeisureSaasClient, LeisureSaasClient } from "./client";
