@@ -110,9 +110,8 @@ Do **not** ship Integration API Key in App Store / Play builds.
 | `enablePush` / `disablePush` | ✅ | ✅ |
 | `unregisterDeviceToken` | ✅ | ✅ |
 | `sendNotification` | ✅ | ✅ |
-| `getAdsFeed` | ✅ | ✅ |
-| `recordAdEvents` | ✅ | ✅ |
-| `getPublicAdsFeed` / `recordPublicAdEvents` | gateway URL + `pk_live_` | ✅ |
+| `getAdsFeed` / `recordAdEvents` | ✅ deprecated 2026-12-31 | ✅ deprecated |
+| `getPublicAdsFeed` / `recordPublicAdEvents` | gateway URL + `pk_live_`（推荐） | ✅ |
 | `getQuotaUsage` | ❌ (proxy on BFF) | ✅ |
 | `consumeQuota` | ❌ | ✅ |
 | `checkPermission` | ❌ | ✅ |
@@ -287,7 +286,9 @@ Custom render (full control, SDK still tracks impression / click):
 <AdPreview feed={mockFeed} trackImpressions={false} showIndicators />
 ```
 
-`GET /ads/feed` returns **`click_url`**. Clients open it for navigation; impressions use `POST /ads/events` with `placement_key` / `lineup_id` (the `Ad` component handles this after 300ms dwell).
+`GET /ads/feed`（Integration，**deprecated**）returns **`click_url`**. Prefer Public Ads below. Legacy clients open `click_url` for navigation; impressions use `POST /ads/events`.
+
+> **Deprecated (sunset 2026-12-31)** — use `AdsProvider publishableKey` + `getPublicAdsFeed` / `recordPublicAdEvents` instead.
 
 ```tsx
 import {
@@ -310,7 +311,7 @@ function Home() {
 }
 ```
 
-Lower-level API (custom UI):
+Lower-level API (legacy Integration):
 
 ```ts
 const feed = await client.getAdsFeed(token, "home_banner");

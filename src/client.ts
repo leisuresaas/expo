@@ -316,6 +316,7 @@ export class LeisureSaasClient {
     );
   }
 
+  /** @deprecated Prefer getPublicAdsFeed (pk_live_). Sunset 2026-12-31. */
   getAdsFeed(accessToken: string, placement = "home_banner"): Promise<AdsFeedResponse> {
     const q = encodeURIComponent(placement.trim());
     return this.get<AdsFeedResponse>(
@@ -326,6 +327,7 @@ export class LeisureSaasClient {
     ).then((r) => ({ ...r, ads: r.ads ?? [] }));
   }
 
+  /** @deprecated Prefer recordPublicAdEvents with sessionId. Sunset 2026-12-31. */
   recordAdEvents(accessToken: string, events: AdEventInput[]): Promise<number> {
     if (events.length === 0) {
       return Promise.resolve(0);
