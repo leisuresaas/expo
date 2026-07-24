@@ -192,7 +192,7 @@ function AppVersionSection() {
 
 | Env | 说明 |
 |-----|------|
-| `EXPO_PUBLIC_PUBLISHABLE_KEY` | Admin Access → Publishable keys（`pk_live_`；兼容 `EXPO_PUBLIC_APP_CFG_PK`） |
+| `EXPO_PUBLIC_PUBLISHABLE_KEY` | Admin Access → Publishable keys（`pk_live_`） |
 | `EXPO_PUBLIC_OAUTH_ISSUER` | Gateway 根 URL（与 OAuth issuer 同主机即可） |
 
 可选：`labels` 覆盖弹窗文案；`onUpdateRequired` / `onUpdateRecommended` 自定义冷启动弹窗；`skipInDev` / `skipOnWeb`（默认 `__DEV__` 与 Web 不弹窗）。`required` 不可 dismiss；`recommended` 按 `latest_version` 持久化 dismiss（SecureStore）。
@@ -224,7 +224,7 @@ const client = createLeisureSaasClient({ bffBaseUrl: "https://api.myproduct.com"
 </AdsProvider>
 ```
 
-- `publishableKey`：Admin 创建的 `pk_live_...`（可打进 App；兼容旧 `ads_pk_`）
+- `publishableKey`：Admin 创建的 `pk_live_...`（可打进 App）
 - `publicAdsGatewayUrl`：gateway 根 URL（BFF 模式必填；gateway 模式可省略）
 - `resolveAccessToken` 可选；登录后 impression 可附带 user_id
 - `session_id` 由 SDK 自动生成并持久化（SecureStore）
@@ -361,7 +361,7 @@ Public App Config：冷启动 / 设置页版本检查（服务端 semver）。
 | 新增 | 用法 |
 |------|------|
 | `AppUpdateProvider` / `useAppUpdate` / `AppVersionSettingsCard` | 见上文 [App version updates](#app-version-updates-public-app-config)；Settings 推荐 `useAppVersionSettings`（0.5.4+） |
-| `EXPO_PUBLIC_PUBLISHABLE_KEY` | Admin Access → Publishable keys（`pk_live_`；兼容 `EXPO_PUBLIC_APP_CFG_PK`） |
+| `EXPO_PUBLIC_PUBLISHABLE_KEY` | Admin Access → Publishable keys（`pk_live_`） |
 
 ```bash
 npm install @leisuresaas/expo@0.5.2

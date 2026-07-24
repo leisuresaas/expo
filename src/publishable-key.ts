@@ -1,18 +1,14 @@
-/** Sets X-Publishable-Key (preferred) plus an optional legacy header for older gateways. */
+/** Sets X-Publishable-Key for Public API calls. */
 export function applyPublishableKeyHeaders(
   headers: Record<string, string>,
   publishableKey: string,
-  legacyHeader?: string,
 ): void {
   const key = publishableKey.trim();
   if (!key) return;
   headers["X-Publishable-Key"] = key;
-  if (legacyHeader?.trim()) {
-    headers[legacyHeader.trim()] = key;
-  }
 }
 
-/** Prefer EXPO_PUBLIC_PUBLISHABLE_KEY; fall back to legacy per-capability env vars. */
+/** Prefer EXPO_PUBLIC_PUBLISHABLE_KEY; legacy env names still accepted if they hold pk_live_. */
 export function resolvePublishableKeyFromEnv(env: Record<string, string | undefined> = process.env): string {
   return (
     env.EXPO_PUBLIC_PUBLISHABLE_KEY?.trim() ||

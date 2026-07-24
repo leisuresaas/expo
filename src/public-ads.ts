@@ -28,7 +28,7 @@ function publicAdsHeaders(ctx: PublicAdsRequestContext, accessToken?: string): R
     Accept: "application/json",
     "X-Ads-Surface-Key": surfaceKey,
   };
-  applyPublishableKeyHeaders(headers, ctx.publishableKey, "X-Ads-Publishable-Key");
+  applyPublishableKeyHeaders(headers, ctx.publishableKey);
   if (surfaceKey === "web") {
     if (ctx.origin?.trim()) {
       headers.Origin = ctx.origin.trim();

@@ -50,7 +50,7 @@ export async function getPublicAppConfig(
     "X-Client-Platform": platform,
     "X-App-Version": input.appVersion.trim(),
   };
-  applyPublishableKeyHeaders(headers, ctx.publishableKey, "X-App-Cfg-Publishable-Key");
+  applyPublishableKeyHeaders(headers, ctx.publishableKey);
   if (input.appBuild?.trim()) {
     headers["X-App-Build"] = input.appBuild.trim();
   }
