@@ -42,14 +42,20 @@ export type {
   TextLayoutStyles,
   ImageLayoutStyles,
 } from "./ads-ui";
-export { LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
-export type { LeisureSaasAuthContextValue, LeisureSaasAuthProviderProps } from "./auth";
+export { AuthProvider, useAuth, LeisureSaasAuthProvider, useLeisureSaasAuth } from "./auth";
+export type {
+  AuthContextValue,
+  AuthProviderProps,
+  LeisureSaasAuthContextValue,
+  LeisureSaasAuthProviderProps,
+} from "./auth";
 export {
   handleHostedUILink,
   hostedUIURLFromAppOpenLink,
   isHostedUIPasswordResetURL,
   openHostedUIInApp,
   useHostedUIPasswordResetLink,
+  withTerminalMobile,
 } from "./hosted-ui-link";
 export { createLeisureSaasClient, LeisureSaasClient } from "./client";
 export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
@@ -89,6 +95,7 @@ export type {
   Entitlement,
   GatewayClientConfig,
   GoogleConfirmInput,
+  AuthConfig,
   LeisureSaasAuthConfig,
   LeisureSaasClientConfig,
   MobilePlatform,

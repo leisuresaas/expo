@@ -1,5 +1,4 @@
 import * as AuthSession from "expo-auth-session";
-import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import {
   createContext,
@@ -13,15 +12,23 @@ import {
 } from "react";
 
 import { accessNeedsRefresh, refreshOAuthTokens } from "./auth-session";
+import {
+  assertAuthStorageAllowed,
+  authDeleteItem,
+  authGetItem,
+  authSetItem,
+  isWebProduction,
+} from "./auth-storage";
 import { useHostedUIPasswordResetLink } from "./hosted-ui-link";
-import type { LeisureSaasAuthConfig } from "./types";
+import type { AuthConfig } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const DEFAULT_SCOPES = ["openid", "profile"];
 const DEFAULT_REFRESH_STORAGE_KEY = "leisuresaas_refresh_token";
+const DEFAULT_TERMINAL = "mobile";
 
-export type LeisureSaasAuthContextValue = {
+export type AuthContextValue = {
   accessToken: string | null;
   redirectUri: string;
   loading: boolean;
@@ -31,17 +38,18 @@ export type LeisureSaasAuthContextValue = {
   resolveAccessToken: () => Promise<string | null>;
 };
 
-const LeisureSaasAuthContext = createContext<LeisureSaasAuthContextValue | null>(null);
+const AuthContext = createContext<AuthContextValue | null>(null);
 
-export type LeisureSaasAuthProviderProps = {
-  config: LeisureSaasAuthConfig;
+export type AuthProviderProps = {
+  config: AuthConfig;
   children: ReactNode;
 };
 
-export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthProviderProps) {
+export function AuthProvider({ config, children }: AuthProviderProps) {
   const issuer = config.issuer.replace(/\/$/, "");
   const storageKey = config.storageKey ?? "leisuresaas_access_token";
   const refreshStorageKey = config.refreshStorageKey ?? DEFAULT_REFRESH_STORAGE_KEY;
+  const terminal = config.terminal ?? DEFAULT_TERMINAL;
   const redirectUri = AuthSession.makeRedirectUri({
     scheme: config.redirectScheme,
     path: config.redirectPath ?? "auth/callback",
@@ -62,9 +70,10 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
 
   const persistTokens = useCallback(
     async (access: string, refresh?: string) => {
-      await SecureStore.setItemAsync(storageKey, access);
+      assertAuthStorageAllowed();
+      await authSetItem(storageKey, access);
       if (refresh) {
-        await SecureStore.setItemAsync(refreshStorageKey, refresh);
+        await authSetItem(refreshStorageKey, refresh);
       }
       setAccessToken(access);
     },
@@ -76,17 +85,17 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
       return refreshInFlight.current;
     }
     const task = (async () => {
-      const refreshToken = (await SecureStore.getItemAsync(refreshStorageKey))?.trim();
+      const refreshToken = (await authGetItem(refreshStorageKey))?.trim();
       if (!refreshToken) {
-        return (await SecureStore.getItemAsync(storageKey))?.trim() || null;
+        return (await authGetItem(storageKey))?.trim() || null;
       }
       try {
         const tokens = await refreshOAuthTokens(issuer, config.clientId, refreshToken);
         await persistTokens(tokens.accessToken, tokens.refreshToken ?? refreshToken);
         return tokens.accessToken;
       } catch (err) {
-        console.warn("LeisureSaas OAuth refresh failed", err);
-        return (await SecureStore.getItemAsync(storageKey))?.trim() || null;
+        console.warn("OAuth refresh failed", err);
+        return (await authGetItem(storageKey))?.trim() || null;
       } finally {
         refreshInFlight.current = null;
       }
@@ -96,7 +105,7 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
   }, [config.clientId, issuer, persistTokens, refreshStorageKey, storageKey]);
 
   const resolveAccessToken = useCallback(async (): Promise<string | null> => {
-    const current = (await SecureStore.getItemAsync(storageKey))?.trim() || accessToken;
+    const current = (await authGetItem(storageKey))?.trim() || accessToken;
     if (!current) {
       return null;
     }
@@ -107,8 +116,13 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
   }, [accessToken, refreshStoredTokens, storageKey]);
 
   useEffect(() => {
+    if (isWebProduction()) {
+      setAccessToken(null);
+      setLoading(false);
+      return;
+    }
     (async () => {
-      const stored = (await SecureStore.getItemAsync(storageKey))?.trim() || null;
+      const stored = (await authGetItem(storageKey))?.trim() || null;
       if (!stored) {
         setAccessToken(null);
         setLoading(false);
@@ -131,6 +145,7 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
       scopes,
+      extraParams: { terminal },
     },
     discovery,
   );
@@ -158,7 +173,7 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
         }
         await persistTokens(token, tokenRes.refreshToken?.trim());
       } catch (err) {
-        console.warn("LeisureSaas OAuth exchange failed", err);
+        console.warn("OAuth exchange failed", err);
       } finally {
         setLoading(false);
       }
@@ -166,6 +181,7 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
   }, [config.clientId, discovery, persistTokens, redirectUri, request?.codeVerifier, response]);
 
   const login = useCallback(async () => {
+    assertAuthStorageAllowed();
     if (!request) {
       throw new Error("OAuth request not ready");
     }
@@ -173,8 +189,8 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
   }, [promptAsync, request]);
 
   const logout = useCallback(async () => {
-    await SecureStore.deleteItemAsync(storageKey);
-    await SecureStore.deleteItemAsync(refreshStorageKey);
+    await authDeleteItem(storageKey);
+    await authDeleteItem(refreshStorageKey);
     setAccessToken(null);
   }, [refreshStorageKey, storageKey]);
 
@@ -183,13 +199,22 @@ export function LeisureSaasAuthProvider({ config, children }: LeisureSaasAuthPro
     [accessToken, redirectUri, loading, login, logout, resolveAccessToken],
   );
 
-  return <LeisureSaasAuthContext.Provider value={value}>{children}</LeisureSaasAuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useLeisureSaasAuth(): LeisureSaasAuthContextValue {
-  const ctx = useContext(LeisureSaasAuthContext);
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error("useLeisureSaasAuth must be used within LeisureSaasAuthProvider");
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return ctx;
 }
+
+/** @deprecated Use AuthProvider */
+export const LeisureSaasAuthProvider = AuthProvider;
+/** @deprecated Use useAuth */
+export const useLeisureSaasAuth = useAuth;
+/** @deprecated Use AuthContextValue */
+export type LeisureSaasAuthContextValue = AuthContextValue;
+/** @deprecated Use AuthProviderProps */
+export type LeisureSaasAuthProviderProps = AuthProviderProps;

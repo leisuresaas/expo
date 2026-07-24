@@ -47,12 +47,30 @@ export function hostedUIURLFromAppOpenLink(url: string): string | null {
   }
 }
 
+/** Ensure Hosted UI opens with compact mobile layout when terminal is absent. */
+export function withTerminalMobile(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed || !/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  try {
+    const u = new URL(trimmed);
+    if (!u.searchParams.get("terminal")) {
+      u.searchParams.set("terminal", "mobile");
+    }
+    return u.toString();
+  } catch {
+    return trimmed;
+  }
+}
+
 /**
  * Open Hosted UI password-reset (or other identity) URL inside an in-app browser.
  * Pass the HTTPS Universal Link / App Link URL unchanged — do not strip token.
+ * Adds `terminal=mobile` when missing so Hosted UI uses the compact layout.
  */
 export async function openHostedUIInApp(url: string): Promise<void> {
-  const trimmed = url.trim();
+  const trimmed = withTerminalMobile(url.trim());
   if (!trimmed) {
     return;
   }
@@ -82,7 +100,7 @@ export async function handleHostedUILink(url: string): Promise<boolean> {
 
 /**
  * Subscribe to cold-start + foreground links for Hosted UI reset-password / auth/open.
- * Call once near the app root (e.g. inside LeisureSaasAuthProvider children).
+ * Call once near the app root (e.g. inside AuthProvider children).
  */
 export function useHostedUIPasswordResetLink(enabled = true): void {
   useEffect(() => {

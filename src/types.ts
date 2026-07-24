@@ -119,7 +119,7 @@ export type DeviceTokenResult = {
   status?: string;
 };
 
-export type LeisureSaasAuthConfig = {
+export type AuthConfig = {
   issuer: string;
   clientId: string;
   redirectScheme: string;
@@ -127,9 +127,17 @@ export type LeisureSaasAuthConfig = {
   scopes?: string[];
   storageKey?: string;
   refreshStorageKey?: string;
+  /**
+   * OAuth authorize `terminal` for Hosted UI layout (`mobile` = compact In-App Browser).
+   * Default: `mobile`.
+   */
+  terminal?: "mobile" | "web";
   /** When true (default), Universal Links to Hosted UI reset-password open In-App Browser. */
   handlePasswordResetLinks?: boolean;
 };
+
+/** @deprecated Use AuthConfig */
+export type LeisureSaasAuthConfig = AuthConfig;
 
 export type AdFeedItem = {
   id: string;

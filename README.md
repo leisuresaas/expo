@@ -40,11 +40,11 @@ Peer dependencies: `expo`, `expo-auth-session`, `expo-secure-store`, `expo-web-b
 
 ```tsx
 import {
-  LeisureSaasAuthProvider,
+  AuthProvider,
   createLeisureSaasClient,
   devAppleSignedTransaction,
   mobilePlatform,
-  useLeisureSaasAuth,
+  useAuth,
 } from "@leisuresaas/expo";
 
 const client = createLeisureSaasClient({
@@ -53,20 +53,21 @@ const client = createLeisureSaasClient({
 
 export function App() {
   return (
-    <LeisureSaasAuthProvider
+    <AuthProvider
       config={{
         issuer: "https://auth.example.com",
         clientId: "my-app-mobile",
         redirectScheme: "myapp",
+        terminal: "mobile", // Hosted UI compact layout (default)
       }}
     >
       <Home />
-    </LeisureSaasAuthProvider>
+    </AuthProvider>
   );
 }
 
 function Home() {
-  const { accessToken, login } = useLeisureSaasAuth();
+  const { accessToken, login } = useAuth();
   // client.listPlans(accessToken, mobilePlatform())
   // client.confirmApplePurchase(accessToken, { signedTransaction: devAppleSignedTransaction(sku) })
 }
@@ -76,13 +77,23 @@ Register OAuth redirect URI in Admin: `{scheme}://auth/callback` (from `makeRedi
 
 Also register `{scheme}://auth/password-reset-done` (or same scheme) so Hosted UI can return after password reset.
 
+### Auth storage (Native vs Web)
+
+| Environment | Behavior |
+|-------------|----------|
+| **Native** | Always `SecureStore` (Keychain / Keystore) |
+| **Web + `__DEV__`** | Persist access/refresh in `localStorage` so `npm start` can debug OAuth in the browser |
+| **Web production** | **No** durable OAuth tokens — `login()` / persist throw; use the native app |
+
 ### Password reset deep link (Universal Links)
 
-When the user taps a password-reset email link, iOS/Android should open your App (Associated Domains / App Links on the Hosted UI host). `LeisureSaasAuthProvider` then opens the same HTTPS URL in an In-App Browser (`terminal=mobile` Hosted UI).
+When the user taps a password-reset email link, iOS/Android should open your App (Associated Domains / App Links on the Hosted UI host). `AuthProvider` then opens the same HTTPS URL in an In-App Browser (`terminal=mobile` Hosted UI).
 
 1. Admin → Product → Domains → **App Links**: set `app_scheme`, iOS Team/Bundle, Android package + SHA-256.
 2. Expo `app.json`: `scheme`, `ios.associatedDomains` (`applinks:{slug}.hosted-ui…`), Android `intentFilters` with `autoVerify`.
-3. Keep `handlePasswordResetLinks` enabled (default) on `LeisureSaasAuthProvider`, or call `handleHostedUILink(url)` yourself.
+3. Keep `handlePasswordResetLinks` enabled (default) on `AuthProvider`, or call `handleHostedUILink(url)` yourself.
+
+> Deprecated aliases: `LeisureSaasAuthProvider` / `useLeisureSaasAuth` still export to `AuthProvider` / `useAuth`.
 
 ## Gateway mode (dev only)
 
@@ -208,7 +219,7 @@ import {
   AdsProvider,
   AdBanner,
   createLeisureSaasClient,
-  useLeisureSaasAuth,
+  useAuth,
 } from "@leisuresaas/expo";
 
 const client = createLeisureSaasClient({ bffBaseUrl: "https://api.myproduct.com" });
@@ -258,7 +269,7 @@ import {
   AdBanner,
   defaultAdsTheme,
   createLeisureSaasClient,
-  useLeisureSaasAuth,
+  useAuth,
 } from "@leisuresaas/expo";
 
 const theme = {
@@ -295,13 +306,13 @@ import {
   AdsProvider,
   AdBanner,
   createLeisureSaasClient,
-  useLeisureSaasAuth,
+  useAuth,
 } from "@leisuresaas/expo";
 
 const client = createLeisureSaasClient({ bffBaseUrl: "https://api.myproduct.com" });
 
 function Home() {
-  const { resolveAccessToken } = useLeisureSaasAuth();
+  const { resolveAccessToken } = useAuth();
 
   return (
     <AdsProvider client={client} resolveAccessToken={resolveAccessToken}>
