@@ -74,6 +74,32 @@ function Home() {
 }
 ```
 
+`login()` rejects with `AuthLoginError` (also mirrored on `lastError`). Prefer try/catch; show `error.message` to users (stable copy in production; `__DEV__` may append cause detail).
+
+```tsx
+import { AuthLoginError, useAuth } from "@leisuresaas/expo";
+
+async function onLoginPress() {
+  try {
+    await login();
+  } catch (e) {
+    if (e instanceof AuthLoginError) {
+      if (e.code === "cancelled") return; // user closed the browser
+      Alert.alert("Sign in", e.message);
+      return;
+    }
+    throw e;
+  }
+}
+```
+
+| `code` | Meaning |
+|--------|---------|
+| `cancelled` | User cancelled / dismissed the auth browser |
+| `no_code` | Redirect without an authorization code |
+| `exchange_failed` | Token exchange failed or missing access token |
+| `not_ready` | Auth request not ready yet (retry shortly) |
+
 Register OAuth redirect URI in Admin: `{scheme}://auth/callback` (from `makeRedirectUri`).
 
 Also register `{scheme}://auth/password-reset-done` (or same scheme) so Hosted UI can return after password reset.

@@ -49,6 +49,8 @@ export type {
   LeisureSaasAuthContextValue,
   LeisureSaasAuthProviderProps,
 } from "./auth";
+export { AuthLoginError } from "./auth-errors";
+export type { AuthLoginErrorCode } from "./auth-errors";
 export { fetchUserInfo } from "./userinfo";
 export type { UserInfo } from "./userinfo";
 export {

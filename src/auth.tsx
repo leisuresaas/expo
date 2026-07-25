@@ -11,6 +11,10 @@ import {
   type ReactNode,
 } from "react";
 
+import { AuthLoginError, toAuthLoginError } from "./auth-errors";
+
+export type { AuthLoginErrorCode } from "./auth-errors";
+export { AuthLoginError } from "./auth-errors";
 import { accessNeedsRefresh, refreshOAuthTokens } from "./auth-session";
 import {
   assertAuthStorageAllowed,
@@ -32,6 +36,8 @@ export type AuthContextValue = {
   accessToken: string | null;
   redirectUri: string;
   loading: boolean;
+  /** Last login failure; cleared on success or logout. Prefer try/catch on `login()`. */
+  lastError: AuthLoginError | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   /** Returns a valid access token, refreshing when near expiry. */
@@ -68,6 +74,7 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
 
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastError, setLastError] = useState<AuthLoginError | null>(null);
   const refreshInFlight = useRef<Promise<string | null> | null>(null);
 
   const persistTokens = useCallback(
@@ -140,7 +147,7 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
     })();
   }, [refreshStoredTokens, storageKey]);
 
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+  const [request, , promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: config.clientId,
       redirectUri,
@@ -155,53 +162,70 @@ export function AuthProvider({ config, children }: AuthProviderProps) {
     discovery,
   );
 
-  useEffect(() => {
-    if (response?.type !== "success" || !response.params.code) {
-      return;
+  const login = useCallback(async () => {
+    assertAuthStorageAllowed();
+    setLastError(null);
+
+    function failLogin(code: AuthLoginError["code"], cause?: unknown): never {
+      const err = toAuthLoginError(code, cause);
+      setLastError(err);
+      throw err;
     }
-    const code = response.params.code;
-    (async () => {
-      setLoading(true);
+
+    if (!request) {
+      failLogin("not_ready");
+    }
+
+    setLoading(true);
+    try {
+      const result = await promptAsync();
+      if (result.type === "cancel" || result.type === "dismiss") {
+        failLogin("cancelled");
+      }
+      if (result.type !== "success") {
+        failLogin("no_code", result);
+      }
+      const code = result.params.code?.trim();
+      if (!code) {
+        failLogin("no_code");
+      }
+
+      let tokenRes: AuthSession.TokenResponse;
       try {
-        const tokenRes = await AuthSession.exchangeCodeAsync(
+        tokenRes = await AuthSession.exchangeCodeAsync(
           {
             clientId: config.clientId,
             code,
             redirectUri,
-            extraParams: { code_verifier: request?.codeVerifier ?? "" },
+            extraParams: { code_verifier: request.codeVerifier ?? "" },
           },
           discovery,
         );
-        const token = tokenRes.accessToken?.trim();
-        if (!token) {
-          throw new Error("missing access_token");
-        }
-        await persistTokens(token, tokenRes.refreshToken?.trim());
       } catch (err) {
-        console.warn("OAuth exchange failed", err);
-      } finally {
-        setLoading(false);
+        failLogin("exchange_failed", err);
       }
-    })();
-  }, [config.clientId, discovery, persistTokens, redirectUri, request?.codeVerifier, response]);
 
-  const login = useCallback(async () => {
-    assertAuthStorageAllowed();
-    if (!request) {
-      throw new Error("OAuth request not ready");
+      const token = tokenRes.accessToken?.trim();
+      if (!token) {
+        failLogin("exchange_failed", new Error("missing access_token"));
+      }
+      await persistTokens(token, tokenRes.refreshToken?.trim());
+      setLastError(null);
+    } finally {
+      setLoading(false);
     }
-    await promptAsync();
-  }, [promptAsync, request]);
+  }, [config.clientId, discovery, persistTokens, promptAsync, redirectUri, request]);
 
   const logout = useCallback(async () => {
     await authDeleteItem(storageKey);
     await authDeleteItem(refreshStorageKey);
     setAccessToken(null);
+    setLastError(null);
   }, [refreshStorageKey, storageKey]);
 
   const value = useMemo(
-    () => ({ accessToken, redirectUri, loading, login, logout, resolveAccessToken }),
-    [accessToken, redirectUri, loading, login, logout, resolveAccessToken],
+    () => ({ accessToken, redirectUri, loading, lastError, login, logout, resolveAccessToken }),
+    [accessToken, redirectUri, loading, lastError, login, logout, resolveAccessToken],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
