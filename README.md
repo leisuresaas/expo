@@ -194,7 +194,19 @@ await client.sendNotification(token, {
 > **AI 接入指南**：[plan/product-app-config-integration.md](../../plan/product-app-config-integration.md)  
 > **平台方案**：[plan/app-config-platform.md](../../plan/app-config-platform.md)
 
-未登录冷启动 / 回前台检查更新（`app_cfg_pk`）。客户端**不要**自写 semver，只读 `update.required` / `update.recommended`。
+未登录冷启动 / 回前台检查更新（`pk_live_` + capability `app_config`）。客户端**不要**自写 semver，只读 `update.required` / `update.recommended`。
+
+响应里的 `links` 来自 Admin → Branding → Links（`support_url` / `terms_url` / `privacy_url`），可与版本检查同一次请求拿到：
+
+```tsx
+import { getPublicAppConfig } from "@leisuresaas/expo";
+
+const cfg = await getPublicAppConfig(
+  { gatewayUrl, publishableKey, bundleId },
+  { appVersion: "1.0.0" },
+);
+// cfg.links.terms_url | privacy_url | support_url
+```
 
 **Settings UI 由产品自绘**（headless）：SDK 只提供状态与动作；样式跟产品设置页一致。
 

@@ -21,6 +21,12 @@ export type AppConfigResponse = {
     release_notes?: string;
     update_message?: string;
   };
+  /** Product support / legal URLs (Admin → Branding → Links). Empty string when unset. */
+  links: {
+    support_url: string;
+    terms_url: string;
+    privacy_url: string;
+  };
   client?: {
     app_version?: string;
     app_build?: string;
@@ -77,5 +83,14 @@ export async function getPublicAppConfig(
   if (!res.ok) {
     throw new LeisureSaasHttpError(res.status, text.trim());
   }
-  return JSON.parse(text) as AppConfigResponse;
+  const body = JSON.parse(text) as AppConfigResponse;
+  const links = body.links ?? { support_url: "", terms_url: "", privacy_url: "" };
+  return {
+    ...body,
+    links: {
+      support_url: String(links.support_url ?? "").trim(),
+      terms_url: String(links.terms_url ?? "").trim(),
+      privacy_url: String(links.privacy_url ?? "").trim(),
+    },
+  };
 }
