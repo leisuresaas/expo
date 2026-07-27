@@ -220,7 +220,7 @@ import {
 
 <AppUpdateProvider
   publishableKey={process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!}
-  gatewayUrl={process.env.EXPO_PUBLIC_GATEWAY_URL ?? process.env.EXPO_PUBLIC_OAUTH_ISSUER!}
+  gatewayUrl={process.env.EXPO_PUBLIC_GATEWAY_URL!}
 >
   {children}
 </AppUpdateProvider>
@@ -257,8 +257,10 @@ function AppVersionSection() {
 | Env | 说明 |
 |-----|------|
 | `EXPO_PUBLIC_PUBLISHABLE_KEY` | Admin Access → Publishable keys（`pk_live_`） |
-| `EXPO_PUBLIC_OAUTH_ISSUER` | OAuth issuer：推荐 Hosted UI **verified primary** 自定义域（`https://account.example.com`），使 iOS 系统框显示产品域；见 [branded-oauth-issuer.md](../../plan/branded-oauth-issuer.md) |
-| `EXPO_PUBLIC_GATEWAY_URL`（或等价） | 平台 API 根（Public Ads / App Config）；**与 issuer 拆分**，勿把 publishable 调用指到登录域 |
+| `EXPO_PUBLIC_OAUTH_ISSUER` | OAuth issuer：推荐 Hosted UI **verified primary** 自定义域（`https://account.example.com`）；**仅**用于 `AuthProvider` / token / userinfo。见 [branded-oauth-issuer.md](../../plan/branded-oauth-issuer.md) |
+| `EXPO_PUBLIC_GATEWAY_URL` | 平台 API 根（Public Ads / App Config）。`AppUpdateProvider` / `AdsProvider` 未传 prop 时默认读此变量。**禁止**用 OAuth issuer 顶替；登录域上无 Public API |
+
+`AppUpdateProvider` / `AdsProvider` 也可省略 `gatewayUrl` / `publicAdsGatewayUrl`，由 SDK 读取 `EXPO_PUBLIC_GATEWAY_URL`（`resolveGatewayUrlFromEnv`）。
 
 可选：`labels` 覆盖弹窗文案；`onUpdateRequired` / `onUpdateRecommended` 自定义冷启动弹窗；`skipInDev` / `skipOnWeb`（默认 `__DEV__` 与 Web 不弹窗）。`required` 不可 dismiss；`recommended` 按 `latest_version` 持久化 dismiss（SecureStore）。
 

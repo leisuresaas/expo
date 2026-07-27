@@ -1,7 +1,9 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import type { LeisureSaasClient } from "../client";
+import { resolveGatewayUrlFromEnv } from "../gateway-url";
 import type { PublicAdsRequestContext } from "../public-ads";
+import { resolvePublishableKeyFromEnv } from "../publishable-key";
 import { adsSurfaceKey } from "../platform";
 import { appBundleId } from "./bundle-id";
 import type { AdsTheme } from "./theme";
@@ -10,7 +12,11 @@ export type AdsProviderProps = {
   client: LeisureSaasClient;
   /** When set, feed/events use Public Ads API (no login required). */
   publishableKey?: string;
-  /** Gateway base for public ads; defaults to client gateway URL in gateway mode. */
+  /**
+   * Platform API base for Public Ads.
+   * Defaults to EXPO_PUBLIC_GATEWAY_URL, then client gateway URL in gateway mode.
+   * Do not pass the OAuth issuer (Hosted UI login host).
+   */
   publicAdsGatewayUrl?: string;
   /** Optional; when logged in, impressions may attach user_id on public events. */
   resolveAccessToken?: () => Promise<string | null>;
@@ -36,8 +42,9 @@ export function AdsProvider({
   children,
 }: AdsProviderProps) {
   const value = useMemo((): AdsContextValue => {
-    const key = publishableKey?.trim() || client.configuredPublishableKey?.();
-    const gatewayUrl = publicAdsGatewayUrl?.trim() || client.gatewayBaseUrl?.();
+    const key = publishableKey?.trim() || client.configuredPublishableKey?.() || resolvePublishableKeyFromEnv();
+    const gatewayUrl =
+      publicAdsGatewayUrl?.trim() || resolveGatewayUrlFromEnv() || client.gatewayBaseUrl?.() || "";
     let publicAds: PublicAdsRequestContext | undefined;
     if (key && gatewayUrl) {
       publicAds = {

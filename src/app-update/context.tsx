@@ -15,8 +15,10 @@ import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 
 import { appBundleId } from "../ads/bundle-id";
+import { resolveGatewayUrlFromEnv } from "../gateway-url";
 import { mobilePlatform } from "../platform";
 import { getPublicAppConfig, type AppConfigResponse } from "../public-app-config";
+import { resolvePublishableKeyFromEnv } from "../publishable-key";
 
 const DISMISS_KEY_PREFIX = "leisuresaas_app_update_dismissed_";
 const THROTTLE_KEY = "leisuresaas_app_update_last_check_at";
@@ -76,6 +78,7 @@ const defaultLabels: Required<AppUpdateLabels> = {
 
 export type AppUpdateProviderProps = {
   publishableKey?: string;
+  /** Platform API root for Public App Config. Defaults to EXPO_PUBLIC_GATEWAY_URL (never OAuth issuer). */
   gatewayUrl?: string;
   locale?: string;
   labels?: AppUpdateLabels;
@@ -148,6 +151,9 @@ export function AppUpdateProvider({
   const skipped =
     (skipInDev && typeof __DEV__ !== "undefined" && __DEV__) || (skipOnWeb && Platform.OS === "web");
 
+  const resolvedPublishableKey = publishableKey?.trim() || resolvePublishableKeyFromEnv();
+  const resolvedGatewayUrl = gatewayUrl?.trim() || resolveGatewayUrlFromEnv();
+
   const dismissForVersion = useCallback(async (latest: string) => {
     const v = latest.trim();
     if (!v) return;
@@ -197,8 +203,8 @@ export function AppUpdateProvider({
 
   const checkForUpdate = useCallback(
     async (opts?: { fresh?: boolean; quiet?: boolean }) => {
-      const key = publishableKey?.trim();
-      const gw = gatewayUrl?.trim();
+      const key = resolvedPublishableKey;
+      const gw = resolvedGatewayUrl;
       if (!key || !gw || skipped) {
         return null;
       }
@@ -242,7 +248,7 @@ export function AppUpdateProvider({
         return null;
       }
     },
-    [publishableKey, gatewayUrl, locale, skipped, showDefaultAlert],
+    [resolvedPublishableKey, resolvedGatewayUrl, locale, skipped, showDefaultAlert],
   );
 
   const openStore = useCallback(async () => {
