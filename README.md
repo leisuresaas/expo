@@ -262,6 +262,19 @@ function AppVersionSection() {
 
 `AppUpdateProvider` / `AdsProvider` 也可省略 `gatewayUrl` / `publicAdsGatewayUrl`，由 SDK 读取 `EXPO_PUBLIC_GATEWAY_URL`（`resolveGatewayUrlFromEnv`）。
 
+可选：仅配 OAuth issuer、从 discovery 解析平台 API 根（需边缘已把 `/.well-known/openid-configuration` 转到 gateway）：
+
+```tsx
+import { resolvePlatformApiBase } from "@leisuresaas/expo";
+
+// prop → EXPO_PUBLIC_GATEWAY_URL → discovery leisuresaas_platform_api_base
+const gatewayUrl = await resolvePlatformApiBase({
+  issuer: process.env.EXPO_PUBLIC_OAUTH_ISSUER,
+});
+```
+
+推荐生产仍显式设置 `EXPO_PUBLIC_GATEWAY_URL`；discovery 扩展为 vendor claim，可忽略。
+
 可选：`labels` 覆盖弹窗文案；`onUpdateRequired` / `onUpdateRecommended` 自定义冷启动弹窗；`skipInDev` / `skipOnWeb`（默认 `__DEV__` 与 Web 不弹窗）。`required` 不可 dismiss；`recommended` 按 `latest_version` 持久化 dismiss（SecureStore）。
 
 ## Platform ads (UI components)
