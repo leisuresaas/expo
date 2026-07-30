@@ -2,6 +2,8 @@
 
 Expo / React Native SDK for LeisureSaas **product OAuth**, **mobile billing**, **platform ads**, **app version updates**, and **notifications** (device token + send via product BFF / Integration).
 
+**AI / agent**：任务速查见 **[AGENTS.md](AGENTS.md)**；可整份投喂的产品手册见 **[plan/ai-product-dev-kit.md](../../plan/ai-product-dev-kit.md)**。
+
 Mirrors [`sdk/go`](../go) Integration API surface for Expo apps. Production apps should call a **product BFF** that holds the Integration API Key; use **gateway mode** only for local dev.
 
 **Push（定稿）**：使用**原生** FCM/APNs token。推荐：
@@ -258,9 +260,28 @@ function AppVersionSection() {
 |-----|------|
 | `EXPO_PUBLIC_PUBLISHABLE_KEY` | Admin Access → Publishable keys（`pk_live_`） |
 | `EXPO_PUBLIC_OAUTH_ISSUER` | OAuth issuer：推荐 Hosted UI **verified primary** 自定义域（`https://account.example.com`）；**仅**用于 `AuthProvider` / token / userinfo。见 [branded-oauth-issuer.md](../../plan/branded-oauth-issuer.md) |
-| `EXPO_PUBLIC_GATEWAY_URL` | 平台 API 根（Public Ads / App Config）。`AppUpdateProvider` / `AdsProvider` 未传 prop 时默认读此变量。**禁止**用 OAuth issuer 顶替；登录域上无 Public API |
+| `EXPO_PUBLIC_GATEWAY_URL` | 平台 API 根（Public Ads / App Config / Drive User Plane）。`AppUpdateProvider` / `AdsProvider` 未传 prop 时默认读此变量。**禁止**用 OAuth issuer 顶替；登录域上无 Public API |
 
 `AppUpdateProvider` / `AdsProvider` 也可省略 `gatewayUrl` / `publicAdsGatewayUrl`，由 SDK 读取 `EXPO_PUBLIC_GATEWAY_URL`（`resolveGatewayUrlFromEnv`）。
+
+### Drive User Plane（登录后文件柜）
+
+PK 需含 capability `drive`。鉴权：`X-Publishable-Key` + 用户 Bearer（`useAuth().accessToken`）。方案见 [storage-user-plane.md](../../plan/storage-user-plane.md)。
+
+```tsx
+import { createFsFolder, listFsNodes, uploadFsFile, useAuth } from "@leisuresaas/expo";
+
+const { accessToken } = useAuth();
+const ctx = {
+  gatewayUrl: process.env.EXPO_PUBLIC_GATEWAY_URL!,
+  publishableKey: process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!,
+  accessToken: accessToken!,
+};
+
+const nodes = await listFsNodes(ctx);
+await createFsFolder(ctx, { name: "Photos" });
+// uploadFsFile(ctx, { name, contentType, size, body }) — session → PUT → finish
+```
 
 可选：仅配 OAuth issuer、从 discovery 解析平台 API 根（需边缘已把 `/.well-known/openid-configuration` 转到 gateway）：
 

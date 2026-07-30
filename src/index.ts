@@ -72,6 +72,26 @@ export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
 export type { PublicAdsRequestContext } from "./public-ads";
 export { getPublicAppConfig } from "./public-app-config";
 export type { AppConfigResponse, PublicAppConfigRequestContext } from "./public-app-config";
+export {
+  DRIVE_UPLOAD_MAX_AUTO_PUT_BYTES,
+  listFsNodes,
+  getFsNode,
+  createFsFolder,
+  renameFsNode,
+  moveFsNode,
+  deleteFsNode,
+  createFsUploadSession,
+  finishFsUploadSession,
+  createFsContentURL,
+  uploadFsFile,
+} from "./drive";
+export type {
+  DriveRequestContext,
+  FsContentURLIntent,
+  FsContentURLResult,
+  FsNode,
+  FsUploadSessionResult,
+} from "./drive";
 export { applyPublishableKeyHeaders, resolvePublishableKeyFromEnv } from "./publishable-key";
 export { resolveGatewayUrlFromEnv } from "./gateway-url";
 export { fetchPlatformApiBase, resolvePlatformApiBase } from "./platform-api-base";
