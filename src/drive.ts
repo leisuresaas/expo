@@ -216,7 +216,7 @@ function createProgressReporter(onProgress: UploadProgressHandler | undefined, t
         next = t;
       }
       maxLoaded = next;
-      const phase = opts?.phase ?? (opts?.complete ? "done" : "put");
+      const phase = opts?.phase ?? "put";
       reportProgress(onProgress, next, t, phase);
     },
   };
@@ -232,8 +232,7 @@ function asUploadBody(body: ArrayBuffer | Blob | Uint8Array): BodyInit {
 
 /**
  * PUT to Presigned upload_url (object store). Progress is client-local; body never hits storage HTTP.
- * Progress is monotonic and stays ≤99% until success is reported.
- * Set `completeOnSuccess: false` when a later Finish/Complete step must run before 100%.
+ * Progress is monotonic; ratio reaches 1 only after PUT 2xx (byte upload done).
  * If the bar resets many times, check that upload_url has no HTTP redirects.
  */
 export async function putFsUploadURL(
@@ -241,7 +240,7 @@ export async function putFsUploadURL(
   uploadHeaders: Record<string, string> | undefined,
   contentType: string,
   body: ArrayBuffer | Blob | Uint8Array,
-  opts?: { size?: number; onProgress?: UploadProgressHandler; completeOnSuccess?: boolean },
+  opts?: { size?: number; onProgress?: UploadProgressHandler },
 ): Promise<void> {
   const headers: Record<string, string> = { ...(uploadHeaders ?? {}) };
   if (!headers["Content-Type"] && !headers["content-type"] && contentType) {
@@ -253,7 +252,6 @@ export async function putFsUploadURL(
     else if (body instanceof Uint8Array) total = body.byteLength;
     else if (typeof ArrayBuffer !== "undefined" && body instanceof ArrayBuffer) total = body.byteLength;
   }
-  const completeOnSuccess = opts?.completeOnSuccess !== false;
   const progress = createProgressReporter(opts?.onProgress, total);
 
   if (opts?.onProgress && typeof XMLHttpRequest !== "undefined") {
@@ -268,11 +266,7 @@ export async function putFsUploadURL(
       };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          if (completeOnSuccess) {
-            progress.report(total > 0 ? total : 1, { complete: true, phase: "done" });
-          } else {
-            progress.report(total > 0 ? total : 0, { phase: "finishing" });
-          }
+          progress.report(total > 0 ? total : 1, { complete: true, phase: "put" });
           resolve();
           return;
         }
@@ -303,11 +297,7 @@ export async function putFsUploadURL(
     const text = await res.text().catch(() => "");
     throw new LeisureSaasHttpError(res.status, text.trim() || "upload PUT failed");
   }
-  if (completeOnSuccess) {
-    progress.report(total > 0 ? total : 1, { complete: true, phase: "done" });
-  } else {
-    progress.report(total > 0 ? total : 0, { phase: "finishing" });
-  }
+  progress.report(total > 0 ? total : 1, { complete: true, phase: "put" });
 }
 
 /** CreateFsUploadSession → PUT upload_url → FinishFsUploadSession (≤ 20 MiB). */
@@ -319,7 +309,10 @@ export async function uploadFsFile(
     size: number;
     body: ArrayBuffer | Blob | Uint8Array;
     parentId?: string;
-    /** PUT + finish; 100% only after Finish succeeds (`phase: done`). */
+    /**
+     * ratio 0→1 = Presigned PUT only. After PUT, phase becomes "finishing" (ratio stays 1)
+     * for independent UI copy; then "done" when Finish succeeds.
+     */
     onProgress?: UploadProgressHandler;
   },
 ): Promise<FsNode> {
@@ -338,16 +331,26 @@ export async function uploadFsFile(
     size: input.size,
     parentId: input.parentId,
   });
-  const progress = createProgressReporter(input.onProgress, input.size);
   await putFsUploadURL(sess.upload_url, sess.upload_headers, input.contentType, input.body, {
     size: input.size,
-    completeOnSuccess: false,
-    onProgress: input.onProgress
-      ? (p) => progress.report(p.loaded, { phase: p.phase === "finishing" ? "finishing" : "put" })
-      : undefined,
+    onProgress: input.onProgress,
   });
-  progress.report(input.size, { phase: "finishing" });
+  if (input.onProgress) {
+    input.onProgress({
+      loaded: input.size,
+      total: input.size,
+      ratio: 1,
+      phase: "finishing",
+    });
+  }
   const node = await finishFsUploadSession(ctx, sess.node.id);
-  progress.report(input.size, { complete: true, phase: "done" });
+  if (input.onProgress) {
+    input.onProgress({
+      loaded: input.size,
+      total: input.size,
+      ratio: 1,
+      phase: "done",
+    });
+  }
   return node;
 }

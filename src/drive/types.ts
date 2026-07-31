@@ -35,12 +35,12 @@ export type FsContentURLIntent = "preview" | "download" | "";
 export type UploadProgress = {
   loaded: number;
   total: number;
-  /** 0..1 when total > 0 */
+  /** 0..1 — Presigned PUT bytes only (not Finish/Complete duration). */
   ratio: number;
   /**
-   * put — Presigned PUT in flight (ratio ≤ ~0.99)
-   * finishing — PUT done, Finish/Complete RPC in flight (still ≤ ~0.99)
-   * done — whole upload pipeline succeeded (ratio 1)
+   * put — uploading bytes (ratio 0→1; 1 means PUT 2xx)
+   * finishing — PUT done; Finish in flight (ratio stays 1; use separate copy)
+   * done — Finish succeeded
    */
   phase?: "put" | "finishing" | "done";
 };

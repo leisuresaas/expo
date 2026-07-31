@@ -288,7 +288,7 @@ await uploadFsFile(ctx, {
   size: bytes.byteLength,
   body: bytes,
   onProgress: ({ loaded, total, ratio, phase }) => {
-    // phase: put | finishing | done — ratio 1 only when phase === "done"
+    // ratio = PUT only. phase "finishing" → show "确认中…"; "done" → dismiss.
   },
 });
 ```
