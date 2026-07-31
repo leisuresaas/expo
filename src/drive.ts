@@ -195,6 +195,27 @@ function reportProgress(onProgress: UploadProgressHandler | undefined, loaded: n
   onProgress({ loaded, total: t, ratio });
 }
 
+/** Monotonic progress; beforeComplete caps below 100% until the PUT is confirmed 2xx. */
+function createProgressReporter(onProgress: UploadProgressHandler | undefined, total: number) {
+  let maxLoaded = 0;
+  return {
+    report(loaded: number, opts?: { complete?: boolean }) {
+      if (!onProgress) return;
+      let next = Math.max(0, loaded);
+      if (next < maxLoaded) next = maxLoaded;
+      const t = total > 0 ? total : 0;
+      if (!opts?.complete && t > 0 && next >= t) {
+        next = Math.max(0, t - 1);
+      }
+      if (opts?.complete && t > 0) {
+        next = t;
+      }
+      maxLoaded = next;
+      reportProgress(onProgress, next, t);
+    },
+  };
+}
+
 function asUploadBody(body: ArrayBuffer | Blob | Uint8Array): BodyInit {
   if (body instanceof Uint8Array) return body as unknown as BodyInit;
   if (typeof ArrayBuffer !== "undefined" && body instanceof ArrayBuffer) {
@@ -203,7 +224,11 @@ function asUploadBody(body: ArrayBuffer | Blob | Uint8Array): BodyInit {
   return body as BodyInit;
 }
 
-/** PUT to Presigned upload_url (object store). Progress is client-local; body never hits storage HTTP. */
+/**
+ * PUT to Presigned upload_url (object store). Progress is client-local; body never hits storage HTTP.
+ * Progress is monotonic and stays ≤99% until the PUT returns 2xx (avoids false 100% on redirect/retry).
+ * If the bar resets many times, check that upload_url has no HTTP redirects.
+ */
 export async function putFsUploadURL(
   uploadURL: string,
   uploadHeaders: Record<string, string> | undefined,
@@ -221,9 +246,9 @@ export async function putFsUploadURL(
     else if (body instanceof Uint8Array) total = body.byteLength;
     else if (typeof ArrayBuffer !== "undefined" && body instanceof ArrayBuffer) total = body.byteLength;
   }
-  const onProgress = opts?.onProgress;
+  const progress = createProgressReporter(opts?.onProgress, total);
 
-  if (onProgress && typeof XMLHttpRequest !== "undefined") {
+  if (opts?.onProgress && typeof XMLHttpRequest !== "undefined") {
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", uploadURL);
@@ -231,13 +256,11 @@ export async function putFsUploadURL(
         if (v != null && v !== "") xhr.setRequestHeader(k, v);
       }
       xhr.upload.onprogress = (ev) => {
-        const loaded = ev.lengthComputable ? ev.loaded : ev.loaded;
-        const t = ev.lengthComputable && ev.total > 0 ? ev.total : total;
-        reportProgress(onProgress, loaded, t);
+        progress.report(ev.loaded);
       };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          reportProgress(onProgress, total > 0 ? total : xhr.response?.length ?? 0, total);
+          progress.report(total > 0 ? total : 1, { complete: true });
           resolve();
           return;
         }
@@ -245,23 +268,30 @@ export async function putFsUploadURL(
       };
       xhr.onerror = () => reject(new LeisureSaasHttpError(0, "upload PUT network error"));
       xhr.onabort = () => reject(new LeisureSaasHttpError(0, "upload PUT aborted"));
-      reportProgress(onProgress, 0, total);
+      progress.report(0);
       xhr.send(asUploadBody(body) as XMLHttpRequestBodyInit);
     });
     return;
   }
 
-  reportProgress(onProgress, 0, total);
+  progress.report(0);
   const res = await fetch(uploadURL, {
     method: "PUT",
     headers,
     body: asUploadBody(body),
+    redirect: "manual",
   });
+  if (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400)) {
+    throw new LeisureSaasHttpError(
+      res.status || 0,
+      "upload PUT redirected; set object_store public/client endpoint to the final S3 API host with no redirects",
+    );
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new LeisureSaasHttpError(res.status, text.trim() || "upload PUT failed");
   }
-  reportProgress(onProgress, total, total);
+  progress.report(total > 0 ? total : 1, { complete: true });
 }
 
 /** CreateFsUploadSession → PUT upload_url → FinishFsUploadSession (≤ 20 MiB). */

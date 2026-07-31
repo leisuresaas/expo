@@ -268,7 +268,7 @@ function AppVersionSection() {
 
 PK 需含 capability `drive`。鉴权：`X-Publishable-Key` + 用户 Bearer（`useAuth().accessToken`）。方案见 [storage-user-plane.md](../../plan/storage-user-plane.md)。
 
-字节直传对象存储（Presigned PUT），**不经** storage HTTP。上传进度用客户端 `onProgress`（XHR upload progress）。
+字节直传对象存储（Presigned PUT），**不经** storage HTTP。上传进度用客户端 `onProgress`（单调；2xx 前最高约 99%）。若进度多次归零，检查 `upload_url` 是否被 HTTP 重定向。
 
 ```tsx
 import { createFsFolder, listFsNodes, uploadFsFile, useAuth } from "@leisuresaas/expo";
