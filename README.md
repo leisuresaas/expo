@@ -287,8 +287,8 @@ await uploadFsFile(ctx, {
   contentType: "image/jpeg",
   size: bytes.byteLength,
   body: bytes,
-  onProgress: ({ loaded, total, ratio }) => {
-    // update UI; PUT only — finish is separate
+  onProgress: ({ loaded, total, ratio, phase }) => {
+    // phase: put | finishing | done — ratio 1 only when phase === "done"
   },
 });
 ```

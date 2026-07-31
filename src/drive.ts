@@ -188,18 +188,23 @@ export async function createFsContentURL(
   );
 }
 
-function reportProgress(onProgress: UploadProgressHandler | undefined, loaded: number, total: number) {
+function reportProgress(
+  onProgress: UploadProgressHandler | undefined,
+  loaded: number,
+  total: number,
+  phase?: UploadProgress["phase"],
+) {
   if (!onProgress) return;
   const t = total > 0 ? total : 0;
   const ratio = t > 0 ? Math.min(1, Math.max(0, loaded / t)) : 0;
-  onProgress({ loaded, total: t, ratio });
+  onProgress({ loaded, total: t, ratio, phase });
 }
 
-/** Monotonic progress; beforeComplete caps below 100% until the PUT is confirmed 2xx. */
+/** Monotonic progress; without complete, caps below 100%. */
 function createProgressReporter(onProgress: UploadProgressHandler | undefined, total: number) {
   let maxLoaded = 0;
   return {
-    report(loaded: number, opts?: { complete?: boolean }) {
+    report(loaded: number, opts?: { complete?: boolean; phase?: UploadProgress["phase"] }) {
       if (!onProgress) return;
       let next = Math.max(0, loaded);
       if (next < maxLoaded) next = maxLoaded;
@@ -211,7 +216,8 @@ function createProgressReporter(onProgress: UploadProgressHandler | undefined, t
         next = t;
       }
       maxLoaded = next;
-      reportProgress(onProgress, next, t);
+      const phase = opts?.phase ?? (opts?.complete ? "done" : "put");
+      reportProgress(onProgress, next, t, phase);
     },
   };
 }
@@ -226,7 +232,8 @@ function asUploadBody(body: ArrayBuffer | Blob | Uint8Array): BodyInit {
 
 /**
  * PUT to Presigned upload_url (object store). Progress is client-local; body never hits storage HTTP.
- * Progress is monotonic and stays ≤99% until the PUT returns 2xx (avoids false 100% on redirect/retry).
+ * Progress is monotonic and stays ≤99% until success is reported.
+ * Set `completeOnSuccess: false` when a later Finish/Complete step must run before 100%.
  * If the bar resets many times, check that upload_url has no HTTP redirects.
  */
 export async function putFsUploadURL(
@@ -234,7 +241,7 @@ export async function putFsUploadURL(
   uploadHeaders: Record<string, string> | undefined,
   contentType: string,
   body: ArrayBuffer | Blob | Uint8Array,
-  opts?: { size?: number; onProgress?: UploadProgressHandler },
+  opts?: { size?: number; onProgress?: UploadProgressHandler; completeOnSuccess?: boolean },
 ): Promise<void> {
   const headers: Record<string, string> = { ...(uploadHeaders ?? {}) };
   if (!headers["Content-Type"] && !headers["content-type"] && contentType) {
@@ -246,6 +253,7 @@ export async function putFsUploadURL(
     else if (body instanceof Uint8Array) total = body.byteLength;
     else if (typeof ArrayBuffer !== "undefined" && body instanceof ArrayBuffer) total = body.byteLength;
   }
+  const completeOnSuccess = opts?.completeOnSuccess !== false;
   const progress = createProgressReporter(opts?.onProgress, total);
 
   if (opts?.onProgress && typeof XMLHttpRequest !== "undefined") {
@@ -256,11 +264,15 @@ export async function putFsUploadURL(
         if (v != null && v !== "") xhr.setRequestHeader(k, v);
       }
       xhr.upload.onprogress = (ev) => {
-        progress.report(ev.loaded);
+        progress.report(ev.loaded, { phase: "put" });
       };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          progress.report(total > 0 ? total : 1, { complete: true });
+          if (completeOnSuccess) {
+            progress.report(total > 0 ? total : 1, { complete: true, phase: "done" });
+          } else {
+            progress.report(total > 0 ? total : 0, { phase: "finishing" });
+          }
           resolve();
           return;
         }
@@ -268,13 +280,13 @@ export async function putFsUploadURL(
       };
       xhr.onerror = () => reject(new LeisureSaasHttpError(0, "upload PUT network error"));
       xhr.onabort = () => reject(new LeisureSaasHttpError(0, "upload PUT aborted"));
-      progress.report(0);
+      progress.report(0, { phase: "put" });
       xhr.send(asUploadBody(body) as XMLHttpRequestBodyInit);
     });
     return;
   }
 
-  progress.report(0);
+  progress.report(0, { phase: "put" });
   const res = await fetch(uploadURL, {
     method: "PUT",
     headers,
@@ -291,7 +303,11 @@ export async function putFsUploadURL(
     const text = await res.text().catch(() => "");
     throw new LeisureSaasHttpError(res.status, text.trim() || "upload PUT failed");
   }
-  progress.report(total > 0 ? total : 1, { complete: true });
+  if (completeOnSuccess) {
+    progress.report(total > 0 ? total : 1, { complete: true, phase: "done" });
+  } else {
+    progress.report(total > 0 ? total : 0, { phase: "finishing" });
+  }
 }
 
 /** CreateFsUploadSession → PUT upload_url → FinishFsUploadSession (≤ 20 MiB). */
@@ -303,7 +319,7 @@ export async function uploadFsFile(
     size: number;
     body: ArrayBuffer | Blob | Uint8Array;
     parentId?: string;
-    /** Fires during Presigned PUT only (not session/finish). */
+    /** PUT + finish; 100% only after Finish succeeds (`phase: done`). */
     onProgress?: UploadProgressHandler;
   },
 ): Promise<FsNode> {
@@ -322,9 +338,16 @@ export async function uploadFsFile(
     size: input.size,
     parentId: input.parentId,
   });
+  const progress = createProgressReporter(input.onProgress, input.size);
   await putFsUploadURL(sess.upload_url, sess.upload_headers, input.contentType, input.body, {
     size: input.size,
-    onProgress: input.onProgress,
+    completeOnSuccess: false,
+    onProgress: input.onProgress
+      ? (p) => progress.report(p.loaded, { phase: p.phase === "finishing" ? "finishing" : "put" })
+      : undefined,
   });
-  return finishFsUploadSession(ctx, sess.node.id);
+  progress.report(input.size, { phase: "finishing" });
+  const node = await finishFsUploadSession(ctx, sess.node.id);
+  progress.report(input.size, { complete: true, phase: "done" });
+  return node;
 }

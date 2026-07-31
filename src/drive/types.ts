@@ -31,12 +31,18 @@ export type FsContentURLResult = {
 
 export type FsContentURLIntent = "preview" | "download" | "";
 
-/** Client-side Presigned PUT progress (bytes never go through storage HTTP). */
+/** Client-side upload progress (bytes PUT never go through storage HTTP). */
 export type UploadProgress = {
   loaded: number;
   total: number;
   /** 0..1 when total > 0 */
   ratio: number;
+  /**
+   * put — Presigned PUT in flight (ratio ≤ ~0.99)
+   * finishing — PUT done, Finish/Complete RPC in flight (still ≤ ~0.99)
+   * done — whole upload pipeline succeeded (ratio 1)
+   */
+  phase?: "put" | "finishing" | "done";
 };
 
 /** Tenant Drive occupancy vs Plan byte Limit (same ledger as Complete). */
