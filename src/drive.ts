@@ -154,6 +154,7 @@ export async function createFsUploadSession(
   ctx: DriveRequestContext,
   input: { name: string; contentType: string; size: number; parentId?: string },
 ): Promise<FsUploadSessionResult> {
+  // On active-name conflict the server auto-renames; use result.node.name as final display name.
   const body: Record<string, unknown> = {
     name: input.name,
     content_type: input.contentType,
