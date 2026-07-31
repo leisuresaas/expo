@@ -75,6 +75,7 @@ export type { AppConfigResponse, PublicAppConfigRequestContext } from "./public-
 export {
   DRIVE_UPLOAD_MAX_AUTO_PUT_BYTES,
   listFsNodes,
+  getFsStorageUsage,
   getFsNode,
   createFsFolder,
   renameFsNode,
@@ -91,6 +92,7 @@ export type {
   FsContentURLIntent,
   FsContentURLResult,
   FsNode,
+  FsStorageUsage,
   FsUploadSessionResult,
   UploadProgress,
   UploadProgressHandler,

@@ -7,6 +7,7 @@ import type {
   FsContentURLIntent,
   FsContentURLResult,
   FsNode,
+  FsStorageUsage,
   FsUploadSessionResult,
   UploadProgress,
 } from "./drive/types";
@@ -15,6 +16,7 @@ export type {
   FsContentURLIntent,
   FsContentURLResult,
   FsNode,
+  FsStorageUsage,
   FsUploadSessionResult,
   UploadProgress,
 } from "./drive/types";
@@ -96,6 +98,11 @@ export async function listFsNodes(ctx: DriveRequestContext, parentId = ""): Prom
   const q = parentId.trim() ? `?parent_id=${encodeURIComponent(parentId.trim())}` : "";
   const resp = await driveRequest<{ nodes?: FsNode[] }>(ctx, "GET", `/fs/nodes${q}`);
   return resp.nodes ?? [];
+}
+
+/** Tenant storage occupancy vs Plan Limit (User Plane GET /usage). */
+export async function getFsStorageUsage(ctx: DriveRequestContext): Promise<FsStorageUsage> {
+  return driveRequest<FsStorageUsage>(ctx, "GET", "/usage");
 }
 
 export async function getFsNode(ctx: DriveRequestContext, id: string): Promise<FsNode> {
