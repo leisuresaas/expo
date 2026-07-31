@@ -28,9 +28,9 @@
 | 解析 API base | `resolvePlatformApiBase` | prop → `EXPO_PUBLIC_GATEWAY_URL` → discovery |
 | Push 注册 | `client.enablePush(accessToken)` | 原生 token；需 Dev Client + Vault |
 | Push 注销 | `client.disablePush(accessToken)` | 登出时调用 |
-| Drive 文件柜（User Plane） | `listFsNodes` / `uploadFsFile` / `createFsContentURL` 等 | PK 含 `drive` + `useAuth().accessToken`；见 [storage-user-plane.md](../../plan/storage-user-plane.md) |
+| Drive 文件柜（User Plane） | `listFsNodes` / `uploadFsFile` / `createFsContentURL` 等 | PK 含 `drive` + `useAuth().accessToken`；PUT 进度用 `onProgress`（客户端观测，body 不经 storage） |
 
-**关键词**：`AuthProvider`, `useAuth`, `AuthLoginError`, `createLeisureSaasClient`, `AdsProvider`, `AppUpdateProvider`, `useAppVersionSettings`, `resolvePlatformApiBase`, `resolveGatewayUrlFromEnv`, `enablePush`, `listFsNodes`, `uploadFsFile`, `EXPO_PUBLIC_OAUTH_ISSUER`, `EXPO_PUBLIC_GATEWAY_URL`, `EXPO_PUBLIC_PUBLISHABLE_KEY`
+**关键词**：`AuthProvider`, `useAuth`, `AuthLoginError`, `createLeisureSaasClient`, `AdsProvider`, `AppUpdateProvider`, `useAppVersionSettings`, `resolvePlatformApiBase`, `resolveGatewayUrlFromEnv`, `enablePush`, `listFsNodes`, `uploadFsFile`, `onProgress`, `EXPO_PUBLIC_OAUTH_ISSUER`, `EXPO_PUBLIC_GATEWAY_URL`, `EXPO_PUBLIC_PUBLISHABLE_KEY`
 
 ---
 

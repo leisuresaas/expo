@@ -8,9 +8,16 @@ import type {
   FsContentURLResult,
   FsNode,
   FsUploadSessionResult,
+  UploadProgress,
 } from "./drive/types";
 
-export type { FsContentURLIntent, FsContentURLResult, FsNode, FsUploadSessionResult } from "./drive/types";
+export type {
+  FsContentURLIntent,
+  FsContentURLResult,
+  FsNode,
+  FsUploadSessionResult,
+  UploadProgress,
+} from "./drive/types";
 
 /** Max body size for uploadFsFile auto PUT (matches Go SDK). */
 export const DRIVE_UPLOAD_MAX_AUTO_PUT_BYTES = 20 * 1024 * 1024;
@@ -24,6 +31,8 @@ export type DriveRequestContext = {
   bundleId?: string;
   origin?: string;
 };
+
+export type UploadProgressHandler = (progress: UploadProgress) => void;
 
 function trimSlash(url: string): string {
   return url.replace(/\/$/, "");
@@ -171,21 +180,80 @@ export async function createFsContentURL(
   );
 }
 
-async function putUploadURL(
+function reportProgress(onProgress: UploadProgressHandler | undefined, loaded: number, total: number) {
+  if (!onProgress) return;
+  const t = total > 0 ? total : 0;
+  const ratio = t > 0 ? Math.min(1, Math.max(0, loaded / t)) : 0;
+  onProgress({ loaded, total: t, ratio });
+}
+
+function asUploadBody(body: ArrayBuffer | Blob | Uint8Array): BodyInit {
+  if (body instanceof Uint8Array) return body as unknown as BodyInit;
+  if (typeof ArrayBuffer !== "undefined" && body instanceof ArrayBuffer) {
+    return new Uint8Array(body) as unknown as BodyInit;
+  }
+  return body as BodyInit;
+}
+
+/** PUT to Presigned upload_url (object store). Progress is client-local; body never hits storage HTTP. */
+export async function putFsUploadURL(
   uploadURL: string,
   uploadHeaders: Record<string, string> | undefined,
   contentType: string,
   body: ArrayBuffer | Blob | Uint8Array,
+  opts?: { size?: number; onProgress?: UploadProgressHandler },
 ): Promise<void> {
   const headers: Record<string, string> = { ...(uploadHeaders ?? {}) };
   if (!headers["Content-Type"] && !headers["content-type"] && contentType) {
     headers["Content-Type"] = contentType;
   }
-  const res = await fetch(uploadURL, { method: "PUT", headers, body: body as BodyInit });
+  let total = opts?.size ?? 0;
+  if (total <= 0) {
+    if (typeof Blob !== "undefined" && body instanceof Blob) total = body.size;
+    else if (body instanceof Uint8Array) total = body.byteLength;
+    else if (typeof ArrayBuffer !== "undefined" && body instanceof ArrayBuffer) total = body.byteLength;
+  }
+  const onProgress = opts?.onProgress;
+
+  if (onProgress && typeof XMLHttpRequest !== "undefined") {
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", uploadURL);
+      for (const [k, v] of Object.entries(headers)) {
+        if (v != null && v !== "") xhr.setRequestHeader(k, v);
+      }
+      xhr.upload.onprogress = (ev) => {
+        const loaded = ev.lengthComputable ? ev.loaded : ev.loaded;
+        const t = ev.lengthComputable && ev.total > 0 ? ev.total : total;
+        reportProgress(onProgress, loaded, t);
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          reportProgress(onProgress, total > 0 ? total : xhr.response?.length ?? 0, total);
+          resolve();
+          return;
+        }
+        reject(new LeisureSaasHttpError(xhr.status, (xhr.responseText || "upload PUT failed").trim()));
+      };
+      xhr.onerror = () => reject(new LeisureSaasHttpError(0, "upload PUT network error"));
+      xhr.onabort = () => reject(new LeisureSaasHttpError(0, "upload PUT aborted"));
+      reportProgress(onProgress, 0, total);
+      xhr.send(asUploadBody(body) as XMLHttpRequestBodyInit);
+    });
+    return;
+  }
+
+  reportProgress(onProgress, 0, total);
+  const res = await fetch(uploadURL, {
+    method: "PUT",
+    headers,
+    body: asUploadBody(body),
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new LeisureSaasHttpError(res.status, text.trim() || "upload PUT failed");
   }
+  reportProgress(onProgress, total, total);
 }
 
 /** CreateFsUploadSession → PUT upload_url → FinishFsUploadSession (≤ 20 MiB). */
@@ -197,6 +265,8 @@ export async function uploadFsFile(
     size: number;
     body: ArrayBuffer | Blob | Uint8Array;
     parentId?: string;
+    /** Fires during Presigned PUT only (not session/finish). */
+    onProgress?: UploadProgressHandler;
   },
 ): Promise<FsNode> {
   if (input.size <= 0) {
@@ -214,6 +284,9 @@ export async function uploadFsFile(
     size: input.size,
     parentId: input.parentId,
   });
-  await putUploadURL(sess.upload_url, sess.upload_headers, input.contentType, input.body);
+  await putFsUploadURL(sess.upload_url, sess.upload_headers, input.contentType, input.body, {
+    size: input.size,
+    onProgress: input.onProgress,
+  });
   return finishFsUploadSession(ctx, sess.node.id);
 }

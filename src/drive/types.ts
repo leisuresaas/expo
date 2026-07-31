@@ -30,3 +30,11 @@ export type FsContentURLResult = {
 };
 
 export type FsContentURLIntent = "preview" | "download" | "";
+
+/** Client-side Presigned PUT progress (bytes never go through storage HTTP). */
+export type UploadProgress = {
+  loaded: number;
+  total: number;
+  /** 0..1 when total > 0 */
+  ratio: number;
+};

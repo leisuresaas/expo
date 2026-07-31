@@ -268,6 +268,8 @@ function AppVersionSection() {
 
 PK 需含 capability `drive`。鉴权：`X-Publishable-Key` + 用户 Bearer（`useAuth().accessToken`）。方案见 [storage-user-plane.md](../../plan/storage-user-plane.md)。
 
+字节直传对象存储（Presigned PUT），**不经** storage HTTP。上传进度用客户端 `onProgress`（XHR upload progress）。
+
 ```tsx
 import { createFsFolder, listFsNodes, uploadFsFile, useAuth } from "@leisuresaas/expo";
 
@@ -280,7 +282,15 @@ const ctx = {
 
 const nodes = await listFsNodes(ctx);
 await createFsFolder(ctx, { name: "Photos" });
-// uploadFsFile(ctx, { name, contentType, size, body }) — session → PUT → finish
+await uploadFsFile(ctx, {
+  name: "a.jpg",
+  contentType: "image/jpeg",
+  size: bytes.byteLength,
+  body: bytes,
+  onProgress: ({ loaded, total, ratio }) => {
+    // update UI; PUT only — finish is separate
+  },
+});
 ```
 
 可选：仅配 OAuth issuer、从 discovery 解析平台 API 根（需边缘已把 `/.well-known/openid-configuration` 转到 gateway）：

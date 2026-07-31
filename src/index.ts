@@ -83,6 +83,7 @@ export {
   createFsUploadSession,
   finishFsUploadSession,
   createFsContentURL,
+  putFsUploadURL,
   uploadFsFile,
 } from "./drive";
 export type {
@@ -91,6 +92,8 @@ export type {
   FsContentURLResult,
   FsNode,
   FsUploadSessionResult,
+  UploadProgress,
+  UploadProgressHandler,
 } from "./drive";
 export { applyPublishableKeyHeaders, resolvePublishableKeyFromEnv } from "./publishable-key";
 export { resolveGatewayUrlFromEnv } from "./gateway-url";
