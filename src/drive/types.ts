@@ -35,14 +35,18 @@ export type FsContentURLIntent = "preview" | "download" | "";
 export type UploadProgress = {
   loaded: number;
   total: number;
-  /** 0..1 — Presigned PUT bytes only (not Finish/Complete duration). */
+  /**
+   * 0..1 — byte transfer to object store only.
+   * Reaches 1 when the request body has been fully sent (not when Finish completes).
+   */
   ratio: number;
   /**
-   * put — uploading bytes (ratio 0→1; 1 means PUT 2xx)
-   * finishing — PUT done; Finish in flight (ratio stays 1; use separate copy)
+   * put — sending bytes (ratio 0→1)
+   * storing — body sent; waiting for object store 2xx (ratio stays 1)
+   * finishing — store OK; platform Finish in flight (ratio stays 1)
    * done — Finish succeeded
    */
-  phase?: "put" | "finishing" | "done";
+  phase?: "put" | "storing" | "finishing" | "done";
 };
 
 /** Tenant Drive occupancy vs Plan byte Limit (same ledger as Complete). */

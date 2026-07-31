@@ -200,24 +200,18 @@ function reportProgress(
   onProgress({ loaded, total: t, ratio, phase });
 }
 
-/** Monotonic progress; without complete, caps below 100%. */
+/** Monotonic byte progress reporter. */
 function createProgressReporter(onProgress: UploadProgressHandler | undefined, total: number) {
   let maxLoaded = 0;
   return {
     report(loaded: number, opts?: { complete?: boolean; phase?: UploadProgress["phase"] }) {
       if (!onProgress) return;
+      const t = total > 0 ? total : 0;
       let next = Math.max(0, loaded);
       if (next < maxLoaded) next = maxLoaded;
-      const t = total > 0 ? total : 0;
-      if (!opts?.complete && t > 0 && next >= t) {
-        next = Math.max(0, t - 1);
-      }
-      if (opts?.complete && t > 0) {
-        next = t;
-      }
+      if (opts?.complete && t > 0) next = t;
       maxLoaded = next;
-      const phase = opts?.phase ?? "put";
-      reportProgress(onProgress, next, t, phase);
+      reportProgress(onProgress, next, t, opts?.phase ?? "put");
     },
   };
 }
@@ -232,7 +226,7 @@ function asUploadBody(body: ArrayBuffer | Blob | Uint8Array): BodyInit {
 
 /**
  * PUT to Presigned upload_url (object store). Progress is client-local; body never hits storage HTTP.
- * Progress is monotonic; ratio reaches 1 only after PUT 2xx (byte upload done).
+ * ratio → 1 when the body has been fully sent; then phase "storing" until object store returns 2xx.
  * If the bar resets many times, check that upload_url has no HTTP redirects.
  */
 export async function putFsUploadURL(
@@ -264,9 +258,13 @@ export async function putFsUploadURL(
       xhr.upload.onprogress = (ev) => {
         progress.report(ev.loaded, { phase: "put" });
       };
+      // Body fully handed to the stack — bar at 100%; wait for object-store 2xx under "storing".
+      xhr.upload.onload = () => {
+        progress.report(total > 0 ? total : 1, { complete: true, phase: "storing" });
+      };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          progress.report(total > 0 ? total : 1, { complete: true, phase: "put" });
+          progress.report(total > 0 ? total : 1, { complete: true, phase: "storing" });
           resolve();
           return;
         }
@@ -280,6 +278,7 @@ export async function putFsUploadURL(
     return;
   }
 
+  // fetch: no body-sent signal — jump to storing only after 2xx (put+storing collapsed).
   progress.report(0, { phase: "put" });
   const res = await fetch(uploadURL, {
     method: "PUT",
@@ -297,7 +296,7 @@ export async function putFsUploadURL(
     const text = await res.text().catch(() => "");
     throw new LeisureSaasHttpError(res.status, text.trim() || "upload PUT failed");
   }
-  progress.report(total > 0 ? total : 1, { complete: true, phase: "put" });
+  progress.report(total > 0 ? total : 1, { complete: true, phase: "storing" });
 }
 
 /** CreateFsUploadSession → PUT upload_url → FinishFsUploadSession (≤ 20 MiB). */
@@ -310,8 +309,8 @@ export async function uploadFsFile(
     body: ArrayBuffer | Blob | Uint8Array;
     parentId?: string;
     /**
-     * ratio 0→1 = Presigned PUT only. After PUT, phase becomes "finishing" (ratio stays 1)
-     * for independent UI copy; then "done" when Finish succeeds.
+     * put: ratio 0→1 as bytes send; storing: wait for object-store 2xx (ratio 1);
+     * finishing: platform Finish; done: success. Use phase for copy; bar only tracks put.
      */
     onProgress?: UploadProgressHandler;
   },
