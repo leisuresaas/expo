@@ -116,6 +116,13 @@ export type {
   AppVersionSettingsState,
 } from "./app-update/context";
 export { lineupIdFromSource } from "./ads/lineup-id";
+export {
+  accessNeedsRefresh,
+  exchangeMagicToken,
+  magicTokenFromURL,
+  refreshOAuthTokens,
+} from "./auth-session";
+export type { OAuthTokenResponse } from "./auth-session";
 export { devAppleSignedTransaction, devDeviceToken, devGooglePurchaseToken } from "./dev";
 export { LeisureSaasHttpError } from "./errors";
 export { mobilePlatform, adsSurfaceKey, adsSurfaceHeaders } from "./platform";

@@ -14,6 +14,7 @@
 | 你想做什么 | 用什么 | 配置 / 注意 |
 |-----------|--------|-------------|
 | OAuth 登录 | `AuthProvider` + `useAuth().login` | `issuer` / `clientId` / `redirectScheme`；`terminal: "mobile"` |
+| Magic 登录换票（家庭开通） | `magicTokenFromURL` + `exchangeMagicToken` | grant `urn:leisuresaas:oauth:magic-token`；client 须允许该 grant；见 [household-provision.md](../../plan/household-provision.md) |
 | 处理取消登录 | `AuthLoginError` `code === "cancelled"` | try/catch `login()` |
 | 调产品 BFF | `createLeisureSaasClient({ bffBaseUrl })` | **生产推荐**；Key 在 BFF |
 | 本地直连 Gateway | `createLeisureSaasClient({ gatewayUrl, integrationApiKey })` | **仅开发**；禁止进生产包 |
@@ -30,7 +31,7 @@
 | Push 注销 | `client.disablePush(accessToken)` | 登出时调用 |
 | Drive 文件柜（User Plane） | `listFsNodes` / `uploadFsFile` / `createFsContentURL` 等 | PK 含 `drive` + `useAuth().accessToken`；PUT 进度用 `onProgress`（客户端观测，body 不经 storage） |
 
-**关键词**：`AuthProvider`, `useAuth`, `AuthLoginError`, `createLeisureSaasClient`, `AdsProvider`, `AppUpdateProvider`, `useAppVersionSettings`, `resolvePlatformApiBase`, `resolveGatewayUrlFromEnv`, `enablePush`, `listFsNodes`, `uploadFsFile`, `onProgress`, `EXPO_PUBLIC_OAUTH_ISSUER`, `EXPO_PUBLIC_GATEWAY_URL`, `EXPO_PUBLIC_PUBLISHABLE_KEY`
+**关键词**：`AuthProvider`, `useAuth`, `AuthLoginError`, `exchangeMagicToken`, `magicTokenFromURL`, `refreshOAuthTokens`, `createLeisureSaasClient`, `AdsProvider`, `AppUpdateProvider`, `useAppVersionSettings`, `resolvePlatformApiBase`, `resolveGatewayUrlFromEnv`, `enablePush`, `listFsNodes`, `uploadFsFile`, `onProgress`, `EXPO_PUBLIC_OAUTH_ISSUER`, `EXPO_PUBLIC_GATEWAY_URL`, `EXPO_PUBLIC_PUBLISHABLE_KEY`
 
 ---
 
