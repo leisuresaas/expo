@@ -108,6 +108,25 @@ Register OAuth redirect URI in Admin: `{scheme}://auth/callback` (from `makeRedi
 
 Also register `{scheme}://auth/password-reset-done` (or same scheme) so Hosted UI can return after password reset.
 
+### Magic login (household provision)
+
+After Guardian issues a Magic link and the Ward confirms on Hosted `GET /oauth/magic/redeem`, the App receives a one-time `magic_token` on the redirect. Exchange it for **access + refresh** (OAuth client must allow `urn:leisuresaas:oauth:magic-token`):
+
+```tsx
+import {
+  exchangeMagicToken,
+  magicTokenFromURL,
+} from "@leisuresaas/expo";
+
+const magicToken = magicTokenFromURL(incomingUrl);
+if (magicToken) {
+  const tokens = await exchangeMagicToken(issuer, clientId, magicToken);
+  // persist tokens.accessToken + tokens.refreshToken (e.g. SecureStore / AuthProvider)
+}
+```
+
+Platform SSOT: [plan/household-provision.md](../../plan/household-provision.md). npm: `@leisuresaas/expo@0.5.26+`.
+
 ### Auth storage (Native vs Web)
 
 | Environment | Behavior |

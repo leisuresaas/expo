@@ -1,6 +1,7 @@
 # @leisuresaas/expo — AI Agent Reference
 
 > **受众**：为 LeisureSaas 接入 **独立产品 App（Expo / RN）** 的 AI coding agent。  
+> **npm**：`@leisuresaas/expo@0.5.26+`（含 `exchangeMagicToken`）  
 > **可拷贝全栈手册**：[plan/ai-product-dev-kit.md](../../plan/ai-product-dev-kit.md)  
 > **全能力入口**：[plan/ai-integration-guide.md](../../plan/ai-integration-guide.md)  
 > **人类 README**：[README.md](README.md)  
