@@ -27,6 +27,10 @@ export type AppConfigResponse = {
     terms_url: string;
     privacy_url: string;
   };
+  /** Product authoring locales (BCP 47) from Admin product Settings. */
+  supported_locales: string[];
+  /** Product default locale; always a member of supported_locales. */
+  default_locale: string;
   client?: {
     app_version?: string;
     app_build?: string;
@@ -85,6 +89,10 @@ export async function getPublicAppConfig(
   }
   const body = JSON.parse(text) as AppConfigResponse;
   const links = body.links ?? { support_url: "", terms_url: "", privacy_url: "" };
+  const supported = Array.isArray(body.supported_locales)
+    ? body.supported_locales.map((x) => String(x ?? "").trim()).filter(Boolean)
+    : [];
+  const defaultLocale = String(body.default_locale ?? "").trim() || "en";
   return {
     ...body,
     links: {
@@ -92,5 +100,7 @@ export async function getPublicAppConfig(
       terms_url: String(links.terms_url ?? "").trim(),
       privacy_url: String(links.privacy_url ?? "").trim(),
     },
+    supported_locales: supported.length > 0 ? supported : ["en"],
+    default_locale: defaultLocale,
   };
 }
