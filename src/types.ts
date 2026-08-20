@@ -8,7 +8,14 @@ export type Plan = {
   includes?: { text: string; href?: string; accent?: boolean }[];
   plan_version_id?: string;
   payment_channel?: string;
+  payment_mode?: string;
   is_current?: boolean;
+  /** Concurrent seats.users quota (0/omit = unset). */
+  seat_limit?: number;
+  /** Catalog display order; list is already sorted — do not re-sort client-side. */
+  sort_order?: number;
+  /** Product highlighted plan (at most one); always first in listPlans. */
+  recommended?: boolean;
 };
 
 export type SubscriptionStatus = {

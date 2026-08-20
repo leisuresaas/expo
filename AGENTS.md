@@ -1,7 +1,7 @@
 # @leisuresaas/expo — AI Agent Reference
 
 > **受众**：为 LeisureSaas 接入 **独立产品 App（Expo / RN）** 的 AI coding agent。  
-> **npm**：`@leisuresaas/expo@0.5.26+`（含 `exchangeMagicToken`）  
+> **npm**：`@leisuresaas/expo@0.5.28+`（`Plan.sort_order` / `Plan.recommended`）  
 > **可拷贝全栈手册**：[plan/ai-product-dev-kit.md](../../plan/ai-product-dev-kit.md)  
 > **全能力入口**：[plan/ai-integration-guide.md](../../plan/ai-integration-guide.md)  
 > **人类 README**：[README.md](README.md)  
@@ -19,7 +19,7 @@
 | 处理取消登录 | `AuthLoginError` `code === "cancelled"` | try/catch `login()` |
 | 调产品 BFF | `createLeisureSaasClient({ bffBaseUrl })` | **生产推荐**；Key 在 BFF |
 | 本地直连 Gateway | `createLeisureSaasClient({ gatewayUrl, integrationApiKey })` | **仅开发**；禁止进生产包 |
-| 列套餐 | `client.listPlans(token, mobilePlatform())` | platform: ios/android |
+| 列套餐 | `client.listPlans(token, mobilePlatform(), locale?)` | 顺序已是推荐优先 + `sort_order`；用 `plan.recommended` 打标，勿客户端重排 |
 | Apple 确认 | `client.confirmApplePurchase` | 经 BFF |
 | Google 确认 | `client.confirmGooglePurchase` | 经 BFF |
 | 恢复购买 | `client.restoreApplePurchases` | 经 BFF |
