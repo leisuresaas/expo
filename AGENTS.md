@@ -28,6 +28,7 @@
 | 版本检查 | `AppUpdateProvider` | 同 publishable；**勿**用 issuer 当 gateway |
 | Settings 自绘 | `useAppVersionSettings` | `checkNow` / `openStore` / `message` |
 | 解析 API base | `resolvePlatformApiBase` | prop → `EXPO_PUBLIC_GATEWAY_URL` → discovery |
+| 出站 Webhook | **不要**在 App 收 | 仅产品 BFF：`sdk/go` `NewWebhookReceiver` |
 | Push 注册 | `client.enablePush(accessToken)` | 原生 token；需 Dev Client + Vault |
 | Push 注销 | `client.disablePush(accessToken)` | 登出时调用 |
 | Drive 文件柜（User Plane） | `listFsNodes` / `uploadFsFile` / `createFsContentURL` 等 | PK 含 `drive` + `useAuth().accessToken`；PUT 进度用 `onProgress`（客户端观测，body 不经 storage） |
