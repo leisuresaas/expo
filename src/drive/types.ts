@@ -57,6 +57,6 @@ export type FsStorageUsage = {
   bytes_used: number;
   objects_used: number;
   bytes_limit: number;
-  /** null when bytes_limit === 0 */
+  /** null when bytes_limit < 0 (unlimited) */
   bytes_remaining: number | null;
 };
