@@ -75,7 +75,7 @@ async function driveRequest<T>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const base = `${trimSlash(ctx.gatewayUrl)}/api/v1/user/storage`;
+  const base = `${trimSlash(ctx.gatewayUrl)}/v1/user/storage`;
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
   const headers = driveHeaders(ctx);
   let payload: string | undefined;

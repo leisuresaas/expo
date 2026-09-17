@@ -1,124 +1,88 @@
 # @leisuresaas/expo — AI Agent Reference
 
 > **受众**：为 LeisureSaas 接入 **独立产品 App（Expo / RN）** 的 AI coding agent。  
-> **npm**：`@leisuresaas/expo@0.5.28+`（`Plan.sort_order` / `Plan.recommended`）  
+> **npm**：`@leisuresaas/expo@0.6.0+`（**frontend-only**；无 Integration Key）  
+> **SSOT 变更**：[plan/changelog/2026-09-expo-frontend-only-v1.md](../../plan/changelog/2026-09-expo-frontend-only-v1.md)  
 > **可拷贝全栈手册**：[plan/ai-product-dev-kit.md](../../plan/ai-product-dev-kit.md)  
-> **全能力入口**：[plan/ai-integration-guide.md](../../plan/ai-integration-guide.md)  
-> **人类 README**：[README.md](README.md)  
-> **参考实现**：monorepo `demo/mobile/`  
-> **后端配对**：产品 BFF 用 [sdk/go/AGENTS.md](../go/AGENTS.md)
+> **后端配对**：产品 BFF 用 [sdk/go/AGENTS.md](../go/AGENTS.md)（**仅后端**持 `ik_`）
 
 ---
 
-## 0. 任务速查
+## 0. 硬边界
 
-| 你想做什么 | 用什么 | 配置 / 注意 |
-|-----------|--------|-------------|
-| OAuth 登录 | `AuthProvider` + `useAuth().login` | `issuer` / `clientId` / `redirectScheme`；`terminal: "mobile"` |
-| Magic 登录换票（家庭开通） | `magicTokenFromURL` + `exchangeMagicToken` | grant `urn:leisuresaas:oauth:magic-token`；client 须允许该 grant；见 [household-provision.md](../../plan/household-provision.md) |
-| 处理取消登录 | `AuthLoginError` `code === "cancelled"` | try/catch `login()` |
-| 调产品 BFF | `createLeisureSaasClient({ bffBaseUrl })` | **生产推荐**；Key 在 BFF |
-| 本地直连 Gateway | `createLeisureSaasClient({ gatewayUrl, integrationApiKey })` | **仅开发**；禁止进生产包 |
-| 列套餐 | `client.listPlans(token, mobilePlatform(), locale?)` | 顺序已是推荐优先 + `sort_order`；用 `plan.recommended` 打标，勿客户端重排 |
-| Apple 确认 | `client.confirmApplePurchase` | 经 BFF |
-| Google 确认 | `client.confirmGooglePurchase` | 经 BFF |
-| 恢复购买 | `client.restoreApplePurchases` | 经 BFF |
-| Public 广告 | `AdsProvider` + `AdBanner` 等 | `EXPO_PUBLIC_PUBLISHABLE_KEY` + `EXPO_PUBLIC_GATEWAY_URL` |
-| 上报曝光 | SDK / provider 内建 | 勿 POST click；点 `click_url` |
-| 版本检查 | `AppUpdateProvider` | 同 publishable；**勿**用 issuer 当 gateway |
-| Settings 自绘 | `useAppVersionSettings` | `checkNow` / `openStore` / `message` |
-| 解析 API base | `resolvePlatformApiBase` | prop → `EXPO_PUBLIC_GATEWAY_URL` → discovery |
-| 出站 Webhook | **不要**在 App 收 | 仅产品 BFF：`sdk/go` `NewWebhookReceiver` |
-| Push 注册 | `client.enablePush(accessToken)` | 原生 token；需 Dev Client + Vault |
-| Push 注销 | `client.disablePush(accessToken)` | 登出时调用 |
-| Drive 文件柜（User Plane） | `listFsNodes` / `uploadFsFile` / `createFsContentURL` 等 | PK 含 `drive` + `useAuth().accessToken`；PUT 进度用 `onProgress`（客户端观测，body 不经 storage） |
+| 允许 | 禁止 |
+|------|------|
+| OAuth / Hosted UI / Magic | `ik_` / `X-Integration-Key` / `EXPO_PUBLIC_*` 塞 Integration Key |
+| `/v1/public/*`、`/v1/user/*`（`pk_live_` ± Bearer） | 硬编码产品 BFF 路径；`LeisureSaasClient`（已删除） |
+| `buildEnablePushRegistration`（本地） | SDK 内发 Push 注册 HTTP |
+| AdsProvider / AppUpdate / Drive | gateway「直连 Integration」模式 |
 
-**关键词**：`AuthProvider`, `useAuth`, `AuthLoginError`, `exchangeMagicToken`, `magicTokenFromURL`, `refreshOAuthTokens`, `createLeisureSaasClient`, `AdsProvider`, `AppUpdateProvider`, `useAppVersionSettings`, `resolvePlatformApiBase`, `resolveGatewayUrlFromEnv`, `enablePush`, `listFsNodes`, `uploadFsFile`, `onProgress`, `EXPO_PUBLIC_OAUTH_ISSUER`, `EXPO_PUBLIC_GATEWAY_URL`, `EXPO_PUBLIC_PUBLISHABLE_KEY`
+产品业务（计费、entitlement、device-tokens 登记…）→ **产品自写** `apiFetch` → 产品 BFF → Go SDK。
+
+平台接入方前缀：**`/v1`**（无 `/api`、无 `/integration`）。
 
 ---
 
-## 1. 环境变量（硬边界）
+## 1. 任务速查
 
-| 变量 | 用途 | 禁止 |
-|------|------|------|
-| `EXPO_PUBLIC_OAUTH_ISSUER` | 仅 OAuth / Hosted UI | 当 Public API base |
-| `EXPO_PUBLIC_GATEWAY_URL` | Public Ads / App Config / Drive User Plane（及 gateway 模式） | 用登录品牌域顶替 |
-| `EXPO_PUBLIC_PUBLISHABLE_KEY` | `pk_live_`（ads / app_config / drive） | 再发明 `*_pk_` / 第二套 Drive env；**禁止**新建独立前端库 |
-| （无）Integration Key | — | **生产 App 不得** `EXPO_PUBLIC_*` 携带 `ik_` |
-
-`AdsProvider` / `AppUpdateProvider` 未传 URL prop 时读 `EXPO_PUBLIC_GATEWAY_URL`（`resolveGatewayUrlFromEnv`），**永不**回退 issuer。
-
-品牌登录域说明：[plan/branded-oauth-issuer.md](../../plan/branded-oauth-issuer.md) · [plan/branded-issuer-partner-feedback.md](../../plan/branded-issuer-partner-feedback.md)
+| 你想做什么 | 用什么 |
+|-----------|--------|
+| OAuth 登录 | `AuthProvider` + `useAuth().login` |
+| Magic 登录 | `magicTokenFromURL` + `exchangeMagicToken` |
+| Public 广告 | `AdsProvider`（`publishableKey` + `gatewayUrl`）+ `AdBanner` 等 |
+| 版本检查 | `AppUpdateProvider` |
+| Drive | `listFsNodes` / `uploadFsFile` … + `pk` capability `drive` |
+| Push 注册 | `buildEnablePushRegistration()` → **产品** `POST {bff}/v1/notifications/device-tokens` |
+| 计费 / 套餐 / entitlement | **产品** `apiFetch`，勿用 expo 调 Integration |
 
 ---
 
-## 2. 最小脚手架（BFF）
+## 2. 环境变量
+
+| 变量 | 用途 |
+|------|------|
+| `EXPO_PUBLIC_OAUTH_ISSUER` | 仅 OAuth / Hosted UI |
+| `EXPO_PUBLIC_GATEWAY_URL` | Public Ads / App Config / Drive |
+| `EXPO_PUBLIC_PUBLISHABLE_KEY` | `pk_live_` |
+
+**禁止** `EXPO_PUBLIC_INTEGRATION_KEY`。
+
+---
+
+## 3. 最小脚手架
 
 ```tsx
 import {
   AuthProvider,
   AdsProvider,
   AppUpdateProvider,
-  createLeisureSaasClient,
-  useAuth,
-  AuthLoginError,
+  buildEnablePushRegistration,
 } from "@leisuresaas/expo";
 
-const client = createLeisureSaasClient({
-  bffBaseUrl: "https://api.myproduct.com",
+// Push：本地取 token，产品 BFF 登记
+const reg = await buildEnablePushRegistration();
+await apiFetch(token, "/v1/notifications/device-tokens", {
+  method: "POST",
+  body: JSON.stringify({
+    platform: reg.platform,
+    token: reg.token,
+    android_package: reg.androidPackage,
+    bundle_id: reg.bundleId,
+    environment: reg.environment,
+  }),
 });
 
-export function Root() {
-  return (
-    <AuthProvider
-      config={{
-        issuer: process.env.EXPO_PUBLIC_OAUTH_ISSUER!,
-        clientId: "my-app-mobile",
-        redirectScheme: "myapp",
-        terminal: "mobile",
-      }}
-    >
-      <AppUpdateProvider
-        publishableKey={process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!}
-        checkOnMount
-      >
-        <AdsProvider
-          client={client}
-          publishableKey={process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!}
-        >
-          <App />
-        </AdsProvider>
-      </AppUpdateProvider>
-    </AuthProvider>
-  );
-}
+<AdsProvider
+  publishableKey={process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!}
+  gatewayUrl={process.env.EXPO_PUBLIC_GATEWAY_URL!}
+/>
 ```
 
-`metro.config.js`：`transpilePackages: ["@leisuresaas/expo"]`。
-
 ---
 
-## 3. 反模式
+## 4. Breaking（0.5 → 0.6）
 
-| ❌ | ✅ |
-|----|----|
-| App 打包 Integration Key | BFF 持有 |
-| `gatewayUrl={issuer}` | `EXPO_PUBLIC_GATEWAY_URL` |
-| 客户端自算 semver | `AppUpdateProvider` / `useAppVersionSettings` |
-| Expo Go + Expo Push Token | Dev Client + `enablePush` 原生 token |
-| 自拼广告 click / POST click | feed `click_url` + impression only |
-
----
-
-## 4. 深文档
-
-| 主题 | 文档 |
-|------|------|
-| 产品开发套件 | [plan/ai-product-dev-kit.md](../../plan/ai-product-dev-kit.md) |
-| 广告 | [plan/product-ads-integration.md](../../plan/product-ads-integration.md) |
-| App Config | [plan/product-app-config-integration.md](../../plan/product-app-config-integration.md) |
-| 通知 | [plan/services/notification-platform.md](../../plan/services/notification-platform.md) |
-| Publishable Key | [plan/unified-publishable-keys.md](../../plan/unified-publishable-keys.md) |
-| Drive User Plane | [plan/storage-user-plane.md](../../plan/storage-user-plane.md) · OpenAPI [user-storage-fs.yaml](../../plan/openapi/user-storage-fs.yaml) |
-| Drive FsNode | [plan/storage-drive.md](../../plan/storage-drive.md) |
-| 完整 README | [README.md](README.md) |
+- 删除 `createLeisureSaasClient` / `LeisureSaasClient` / bff+gateway 模式  
+- `AdsProvider` 不再接收 `client`；只要 `publishableKey` + `gatewayUrl`  
+- `enablePush` / `disablePush` HTTP 移除；改用 `buildEnablePushRegistration` + 产品 API  
+- Public/Drive 路径：`/v1/public|user/…`（不再 `/api/v1/…`）

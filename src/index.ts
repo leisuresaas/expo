@@ -67,7 +67,6 @@ export {
   withHostedUILocale,
   withTerminalMobile,
 } from "./hosted-ui-link";
-export { createLeisureSaasClient, LeisureSaasClient } from "./client";
 export { getPublicAdsFeed, recordPublicAdEvents } from "./public-ads";
 export type { PublicAdsRequestContext } from "./public-ads";
 export { getPublicAppConfig } from "./public-app-config";
@@ -123,6 +122,7 @@ export {
   refreshOAuthTokens,
 } from "./auth-session";
 export type { OAuthTokenResponse } from "./auth-session";
+export { buildEnablePushRegistration, fetchNativeDevicePushToken } from "./push";
 export { devAppleSignedTransaction, devDeviceToken, devGooglePurchaseToken } from "./dev";
 export { LeisureSaasHttpError } from "./errors";
 export { mobilePlatform, adsSurfaceKey, adsSurfaceHeaders } from "./platform";
@@ -133,23 +133,12 @@ export type {
   AdFeedRotation,
   AdFeedSource,
   AdsFeedResponse,
-  AppleConfirmInput,
-  BffClientConfig,
-  DeviceTokenResult,
+  AuthConfig,
   EnablePushOptions,
   Entitlement,
-  GatewayClientConfig,
-  GoogleConfirmInput,
-  AuthConfig,
   LeisureSaasAuthConfig,
-  LeisureSaasClientConfig,
   MobilePlatform,
   Plan,
-  QuotaConsumeResult,
-  QuotaUsage,
   RegisterDeviceTokenInput,
-  SendNotificationInput,
-  SendNotificationResult,
-  StoreConfirmResult,
   SubscriptionStatus,
 } from "./types";

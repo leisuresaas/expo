@@ -7,7 +7,7 @@ export function buildAdClickUrl(clickBaseUrl: string, adId: string, productId?: 
   if (!base || !id) {
     return "";
   }
-  let url = `${base}/api/v1/integration/ads/click/${encodeURIComponent(id)}`;
+  let url = `${base}/v1/ads/click/${encodeURIComponent(id)}`;
   const product = productId?.trim();
   if (product) {
     url += `?product_id=${encodeURIComponent(product)}`;

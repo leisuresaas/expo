@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
+import { getPublicAdsFeed, recordPublicAdEvents } from "../public-ads";
 import type { AdFeedItem, AdFeedRotation } from "../types";
 import { IMPRESSION_MIN_DWELL_MS } from "./constants";
 import { useAdsContext } from "./context";
@@ -10,7 +11,7 @@ import type { UseAdsFeedOptions, UseAdsFeedResult } from "./theme";
 const impressionRecorded = new Set<string>();
 
 export function useAdsFeed(options: UseAdsFeedOptions = {}): UseAdsFeedResult {
-  const { client, resolveAccessToken, publicAds } = useAdsContext();
+  const { resolveAccessToken, publicAds } = useAdsContext();
   const placement = options.placement ?? "home_banner";
   const enabled = options.enabled ?? true;
 
@@ -27,21 +28,12 @@ export function useAdsFeed(options: UseAdsFeedOptions = {}): UseAdsFeedResult {
     setLoading(true);
     setError(null);
     try {
-      if (publicAds) {
-        const next = await client.getPublicAdsFeed(publicAds, placement);
-        setFeed(next);
-        return;
-      }
-      if (!resolveAccessToken) {
+      if (!publicAds) {
         setFeed(null);
+        setError(new Error("AdsProvider: publishableKey and gatewayUrl are required for Public Ads"));
         return;
       }
-      const token = await resolveAccessToken();
-      if (!token) {
-        setFeed(null);
-        return;
-      }
-      const next = await client.getAdsFeed(token, placement);
+      const next = await getPublicAdsFeed(publicAds, placement);
       setFeed(next);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -49,7 +41,7 @@ export function useAdsFeed(options: UseAdsFeedOptions = {}): UseAdsFeedResult {
     } finally {
       setLoading(false);
     }
-  }, [client, resolveAccessToken, publicAds, placement, enabled]);
+  }, [publicAds, placement, enabled]);
 
   useEffect(() => {
     void refresh();
@@ -122,7 +114,7 @@ export function useAdImpression(
   placement: string,
   lineupId: string,
 ) {
-  const { client, resolveAccessToken, publicAds } = useAdsContext();
+  const { resolveAccessToken, publicAds } = useAdsContext();
   const sent = useRef<string>("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -131,7 +123,7 @@ export function useAdImpression(
       clearTimeout(timer.current);
       timer.current = null;
     }
-    if (!ad?.id) {
+    if (!ad?.id || !publicAds) {
       return;
     }
     const key = `${ad.id}:${placement}`;
@@ -146,20 +138,9 @@ export function useAdImpression(
           const event = {
             adId: ad.id, eventType: "impression" as const, placementKey: placement, lineupId,
           };
-          if (publicAds) {
-            const sessionId = await getOrCreateAdsSessionId();
-            const token = resolveAccessToken ? await resolveAccessToken() : null;
-            await client.recordPublicAdEvents(publicAds, sessionId, [event], token);
-            return;
-          }
-          if (!resolveAccessToken) {
-            return;
-          }
-          const token = await resolveAccessToken();
-          if (!token) {
-            return;
-          }
-          await client.recordAdEvents(token, [event]);
+          const sessionId = await getOrCreateAdsSessionId();
+          const token = resolveAccessToken ? await resolveAccessToken() : null;
+          await recordPublicAdEvents(publicAds, sessionId, [event], token);
         } catch (err) {
           console.warn("Ad: impression tracking failed", err);
         }
@@ -171,5 +152,5 @@ export function useAdImpression(
         timer.current = null;
       }
     };
-  }, [ad?.id, client, lineupId, placement, publicAds, resolveAccessToken]);
+  }, [ad?.id, lineupId, placement, publicAds, resolveAccessToken]);
 }

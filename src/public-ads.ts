@@ -49,7 +49,7 @@ async function publicAdsRequest<T>(
   body?: unknown,
   accessToken?: string,
 ): Promise<T> {
-  const base = `${trimSlash(ctx.gatewayUrl)}/api/v1/public/ads`;
+  const base = `${trimSlash(ctx.gatewayUrl)}/v1/public/ads`;
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
   const headers = publicAdsHeaders(ctx, accessToken);
   let payload: string | undefined;

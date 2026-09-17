@@ -9,12 +9,12 @@ type ExpoNotificationsModule = {
 
 function loadNotifications(): ExpoNotificationsModule {
   try {
-    // Optional peer: apps must install expo-notifications for enablePush/disablePush.
+    // Optional peer: apps must install expo-notifications.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require("expo-notifications") as ExpoNotificationsModule;
   } catch {
     throw new Error(
-      "LeisureSaasClient.enablePush/disablePush requires peer dependency expo-notifications. Install it in your Expo app.",
+      "buildEnablePushRegistration requires peer dependency expo-notifications. Install it in your Expo app.",
     );
   }
 }
@@ -43,28 +43,34 @@ function resolveEnvironment(opts?: EnablePushOptions): "development" | "producti
   return typeof __DEV__ !== "undefined" && __DEV__ ? "development" : "production";
 }
 
+/** Read native FCM/APNs device token (not Expo Push Token). */
 export async function fetchNativeDevicePushToken(): Promise<string> {
   const Notifications = loadNotifications();
   const device = await Notifications.getDevicePushTokenAsync();
   const token = String(device.data ?? "").trim();
   if (!token) {
-    throw new Error("LeisureSaasClient: empty device push token");
+    throw new Error("empty device push token");
   }
   if (token.startsWith("ExponentPushToken[") || token.startsWith("ExpoPushToken[")) {
     throw new Error(
-      "LeisureSaasClient: ExponentPushToken is not supported; use a Dev Client / Store build with native FCM/APNs",
+      "ExponentPushToken is not supported; use a Dev Client / Store build with native FCM/APNs",
     );
   }
   return token;
 }
 
+/**
+ * Request permission and build the body for product BFF
+ * `POST /v1/notifications/device-tokens` (path is product-defined).
+ * Does not call the network — App must POST via its own apiFetch.
+ */
 export async function buildEnablePushRegistration(
   opts?: EnablePushOptions,
 ): Promise<RegisterDeviceTokenInput> {
   const Notifications = loadNotifications();
   const permission = await Notifications.requestPermissionsAsync();
   if (permission.status !== "granted") {
-    throw new Error(`LeisureSaasClient.enablePush: notification permission ${permission.status}`);
+    throw new Error(`notification permission ${permission.status}`);
   }
 
   const token = await fetchNativeDevicePushToken();
