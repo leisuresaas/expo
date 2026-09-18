@@ -75,6 +75,9 @@ await apiFetch(token, "/v1/notifications/device-tokens", {
 <AdsProvider
   publishableKey={process.env.EXPO_PUBLIC_PUBLISHABLE_KEY!}
   gatewayUrl={process.env.EXPO_PUBLIC_GATEWAY_URL!}
+  onInAppNavigate={(path) => {
+    // path is "/billing" or "/promo?code=1" when creative link_url is app:/...
+  }}
 />
 ```
 

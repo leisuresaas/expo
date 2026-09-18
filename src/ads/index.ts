@@ -1,4 +1,5 @@
 export { AdsProvider, useAdsContext, type AdsProviderProps } from "./context";
+export type { InAppNavigate } from "./open-click";
 export { useAdsFeed, useAdRotation, type UseAdRotationResult } from "./hooks";
 export { Ad, AdBanner, AdSidebar, AdFooter, AdInline } from "./ad";
 export { AdPreview, AdSlotView } from "./ad-slot";

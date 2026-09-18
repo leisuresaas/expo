@@ -47,6 +47,8 @@ import {
 </AuthProvider>
 ```
 
+站内广告：素材 `link_url` 填 `app:/billing`（可带 query）。点击仍走 `click_url`；在 `AdsProvider` 上传 `onInAppNavigate={(path) => router.push(path)}`。未传时站内点击不会打开浏览器。
+
 ### Push（产品 BFF 登记）
 
 ```ts

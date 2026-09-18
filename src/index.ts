@@ -33,6 +33,7 @@ export type {
   AdSlotViewProps,
   AdsProviderProps,
   AdsTheme,
+  InAppNavigate,
   UseAdsFeedOptions,
   UseAdsFeedResult,
   UseAdRotationResult,

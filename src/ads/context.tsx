@@ -5,6 +5,7 @@ import type { PublicAdsRequestContext } from "../public-ads";
 import { resolvePublishableKeyFromEnv } from "../publishable-key";
 import { adsSurfaceKey } from "../platform";
 import { appBundleId } from "./bundle-id";
+import type { InAppNavigate } from "./open-click";
 import type { AdsTheme } from "./theme";
 
 export type AdsProviderProps = {
@@ -20,12 +21,15 @@ export type AdsProviderProps = {
   publicAdsGatewayUrl?: string;
   /** Optional; when logged in, impressions may attach user_id on public events. */
   resolveAccessToken?: () => Promise<string | null>;
+  /** Routes `app:/path` ad clicks inside the app. Path includes an optional query. */
+  onInAppNavigate?: InAppNavigate;
   theme?: AdsTheme;
   children: ReactNode;
 };
 
 type AdsContextValue = {
   resolveAccessToken?: () => Promise<string | null>;
+  onInAppNavigate?: InAppNavigate;
   providerTheme?: AdsTheme;
   publicAds?: PublicAdsRequestContext;
 };
@@ -37,6 +41,7 @@ export function AdsProvider({
   gatewayUrl,
   publicAdsGatewayUrl,
   resolveAccessToken,
+  onInAppNavigate,
   theme,
   children,
 }: AdsProviderProps) {
@@ -56,8 +61,8 @@ export function AdsProvider({
         bundleId: appBundleId(),
       };
     }
-    return { resolveAccessToken, providerTheme: theme, publicAds };
-  }, [publishableKey, gatewayUrl, publicAdsGatewayUrl, resolveAccessToken, theme]);
+    return { resolveAccessToken, onInAppNavigate, providerTheme: theme, publicAds };
+  }, [publishableKey, gatewayUrl, publicAdsGatewayUrl, resolveAccessToken, onInAppNavigate, theme]);
 
   return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }

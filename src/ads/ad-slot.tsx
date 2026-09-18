@@ -39,7 +39,7 @@ export function AdSlotView({
   renderAd,
   renderLayout,
 }: AdSlotViewProps) {
-  const { providerTheme } = useAdsContext();
+  const { providerTheme, onInAppNavigate } = useAdsContext();
   const ads = feed.ads ?? [];
   const rotation = feed.rotation;
   const adType = normalizeAdType(feed.type ?? ads[0]?.type);
@@ -62,9 +62,9 @@ export function AdSlotView({
     onPress?.(ad);
     const clickUrl = ad.click_url?.trim();
     if (clickUrl) {
-      await openAdClickUrl(clickUrl);
+      await openAdClickUrl(clickUrl, { onInAppNavigate });
     }
-  }, [onPress]);
+  }, [onInAppNavigate, onPress]);
 
   const buildContext = useCallback((ad: AdFeedItem, adIndex: number): AdRenderContext => ({
     ad,
